@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>La Famiglia — Jeu Mafia</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Special+Elite&family=Libre+Baskerville:ital@0;1&display=swap');
+
+  :root {
+    --noir: #0a0a0a;
+    --rouge: #8b1a1a;
+    --rouge-vif: #c0392b;
+    --or: #c9a84c;
+    --or-pale: #e8d5a3;
+    --papier: #f4e8c1;
+    --papier-sombre: #d4c49a;
+    --gris: #3a3a3a;
+    --blanc: #f0ece0;
+    --ombre: rgba(0,0,0,0.8);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Special Elite', cursive;
+    background: var(--noir);
+    color: var(--blanc);
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* TEXTURE GRAIN */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* SCREENS */
+  .screen {
+    position: fixed;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .screen.active { display: flex; }
+
+  /* ===== LAUNCH OVERLAY ===== */
+  #screen-launch {
+    background: 
+      radial-gradient(ellipse at center, #1a0a0a 0%, #000 70%),
+      url('bg-main.png') center/cover no-repeat;
+    background-blend-mode: multiply;
+  }
+
+  .launch-content {
+    text-align: center;
+    animation: fadeInUp 1.5s ease;
+  }
+
+  .launch-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(42px, 10vw, 72px);
+    font-weight: 900;
+    font-style: italic;
+    color: var(--or);
+    text-shadow: 0 0 40px rgba(201,168,76,0.5), 2px 2px 0 #000;
+    letter-spacing: -2px;
+    line-height: 0.9;
+    margin-bottom: 8px;
+  }
+
+  .launch-subtitle {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 11px;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--papier-sombre);
+    margin-bottom: 50px;
+  }
+
+  .launch-ornament {
+    color: var(--rouge);
+    font-size: 24px;
+    margin: 0 8px;
+  }
+
+  .btn-launch {
+    display: inline-block;
+    padding: 18px 50px;
+    background: transparent;
+    border: 2px solid var(--or);
+    color: var(--or);
+    font-family: 'Special Elite', cursive;
+    font-size: 14px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+
+  .btn-launch::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--or);
+    transform: translateX(-100%);
+    transition: transform 0.3s;
+  }
+
+  .btn-launch:active::before { transform: translateX(0); }
+  .btn-launch:active { color: var(--noir); }
+
+  .btn-launch span { position: relative; z-index: 1; }
+
+  .launch-deco {
+    margin: 30px 0 50px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .launch-deco-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--rouge), transparent);
+  }
+
+  /* ===== CONFIG SCREEN ===== */
+  #screen-config {
+    background: linear-gradient(160deg, #1a0808 0%, #0a0a0a 60%);
+    justify-content: flex-start;
+    padding-top: 40px;
+  }
+
+  .config-header {
+    text-align: center;
+    margin-bottom: 30px;
+    width: 100%;
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 6vw, 32px);
+    color: var(--or);
+    font-style: italic;
+    text-shadow: 0 0 20px rgba(201,168,76,0.3);
+  }
+
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 8px auto;
+    max-width: 300px;
+  }
+
+  .divider-line {
+    flex: 1;
+    height: 1px;
+    background: var(--rouge);
+  }
+
+  .divider-diamond {
+    width: 6px;
+    height: 6px;
+    background: var(--rouge);
+    transform: rotate(45deg);
+  }
+
+  .player-list {
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 20px;
+    max-height: 35vh;
+    overflow-y: auto;
+  }
+
+  .player-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(201,168,76,0.2);
+    margin-bottom: 8px;
+    border-radius: 2px;
+    animation: slideIn 0.3s ease;
+  }
+
+  .player-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--rouge);
+    font-style: italic;
+    width: 24px;
+    flex-shrink: 0;
+  }
+
+  .player-item input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--blanc);
+    font-family: 'Special Elite', cursive;
+    font-size: 16px;
+    caret-color: var(--or);
+  }
+
+  .player-item input::placeholder { color: rgba(240,236,224,0.3); }
+
+  .btn-delete {
+    background: none;
+    border: none;
+    color: var(--rouge);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+  .btn-delete:active { opacity: 1; }
+
+  .config-controls {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .roles-info {
+    background: rgba(201,168,76,0.08);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 2px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--papier-sombre);
+    line-height: 1.8;
+  }
+
+  .roles-info strong { color: var(--or); }
+
+  .btn-primary {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--rouge) 0%, #5a0e0e 100%);
+    border: none;
+    color: var(--blanc);
+    font-family: 'Special Elite', cursive;
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+  .btn-primary:active { transform: scale(0.98); filter: brightness(1.2); }
+
+  .btn-secondary {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    border: 1px solid rgba(201,168,76,0.4);
+    color: var(--or-pale);
+    font-family: 'Special Elite', cursive;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+  .btn-secondary:active { background: rgba(201,168,76,0.1); }
+
+  /* ===== REVEAL SCREEN ===== */
+  #screen-reveal {
+    background: #0d0d0d;
+  }
+
+  .reveal-card {
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+    animation: fadeInUp 0.5s ease;
+  }
+
+  .reveal-progress {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--papier-sombre);
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+
+  .dossier {
+    background: linear-gradient(160deg, #1c1208 0%, #0e0a05 100%);
+    border: 1px solid var(--or);
+    border-radius: 4px;
+    padding: 30px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dossier::before {
+    content: 'DOSSIER CONFIDENTIEL';
+    position: absolute;
+    top: 10px;
+    right: -30px;
+    background: var(--rouge);
+    color: white;
+    font-size: 9px;
+    letter-spacing: 2px;
+    padding: 3px 40px;
+    transform: rotate(45deg) translateY(-50%);
+  }
+
+  .dossier-stamp {
+    font-family: 'Playfair Display', serif;
+    font-size: 10px;
+    letter-spacing: 5px;
+    color: rgba(201,168,76,0.5);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .player-name-reveal {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(24px, 7vw, 36px);
+    font-style: italic;
+    color: var(--or);
+    margin-bottom: 20px;
+    text-shadow: 0 0 20px rgba(201,168,76,0.4);
+  }
+
+  .role-image {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    margin: 0 auto 16px;
+    display: block;
+    filter: sepia(0.3);
+  }
+
+  .role-image-placeholder {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 56px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.4);
+    border: 2px solid;
+  }
+
+  .role-name {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(20px, 5vw, 28px);
+    font-weight: 900;
+    margin-bottom: 10px;
+  }
+
+  .role-desc {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 12px;
+    font-style: italic;
+    line-height: 1.7;
+    color: var(--papier-sombre);
+    max-width: 260px;
+    margin: 0 auto 20px;
+  }
+
+  .role-mafia .role-name { color: var(--rouge-vif); }
+  .role-mafia .role-image-placeholder { border-color: var(--rouge); }
+  .role-police .role-name { color: #4a9eff; }
+  .role-police .role-image-placeholder { border-color: #4a9eff; }
+  .role-undercover .role-name { color: #a855f7; }
+  .role-undercover .role-image-placeholder { border-color: #a855f7; }
+
+  .btn-confirm {
+    width: 100%;
+    padding: 16px;
+    background: rgba(201,168,76,0.15);
+    border: 1px solid var(--or);
+    color: var(--or);
+    font-family: 'Special Elite', cursive;
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 16px;
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+  .btn-confirm:active { background: rgba(201,168,76,0.3); }
+
+  .reveal-hidden {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .reveal-hidden-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-style: italic;
+    color: var(--or);
+    margin-bottom: 10px;
+  }
+
+  .reveal-hidden-sub {
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--papier-sombre);
+    margin-bottom: 40px;
+  }
+
+  .btn-show-role {
+    display: inline-block;
+    padding: 18px 40px;
+    background: linear-gradient(135deg, var(--rouge) 0%, #3a0a0a 100%);
+    border: 1px solid var(--rouge-vif);
+    color: var(--blanc);
+    font-family: 'Special Elite', cursive;
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    box-shadow: 0 0 30px rgba(139,26,26,0.5);
+    animation: pulse-red 2s infinite;
+  }
+
+  @keyframes pulse-red {
+    0%, 100% { box-shadow: 0 0 20px rgba(139,26,26,0.5); }
+    50% { box-shadow: 0 0 40px rgba(192,57,43,0.8); }
+  }
+
+  /* ===== NIGHT SCREEN ===== */
+  #screen-night {
+    background: #000;
+    overflow: hidden;
+  }
+
+  .night-bg {
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse at 30% 70%, rgba(30,0,0,0.8) 0%, transparent 60%),
+      url('bg-night.jpg') center/cover no-repeat;
+    opacity: 0.4;
+  }
+
+  .night-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+  }
+
+  .night-phase {
+    font-family: 'Playfair Display', serif;
+    font-size: 11px;
+    letter-spacing: 8px;
+    color: rgba(240,236,224,0.3);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .night-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 10vw, 56px);
+    font-weight: 900;
+    font-style: italic;
+    color: var(--blanc);
+    text-shadow: 0 0 40px rgba(255,255,255,0.1);
+    margin-bottom: 8px;
+  }
+
+  .night-subtitle {
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: rgba(201,168,76,0.6);
+    text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+
+  .night-status {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 30px;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .night-instruction {
+    font-family: 'Libre Baskerville', serif;
+    font-style: italic;
+    font-size: 15px;
+    color: rgba(240,236,224,0.7);
+    line-height: 1.7;
+    transition: opacity 0.5s;
+  }
+
+  .night-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 30px;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+
+  .night-indicator.visible { opacity: 1; }
+
+  .indicator-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--or);
+    animation: blink 1.5s infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
+
+  .indicator-text {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--or-pale);
+    text-transform: uppercase;
+  }
+
+  .btn-next-phase {
+    width: 100%;
+    padding: 18px;
+    background: transparent;
+    border: 1px solid rgba(240,236,224,0.2);
+    color: rgba(240,236,224,0.6);
+    font-family: 'Special Elite', cursive;
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 2px;
+    margin-bottom: 16px;
+  }
+
+  .btn-next-phase:not(:disabled):active { 
+    background: rgba(201,168,76,0.1);
+    border-color: var(--or);
+    color: var(--or);
+  }
+
+  .btn-next-phase:disabled { opacity: 0.3; pointer-events: none; }
+
+  /* ===== DAY SCREEN ===== */
+  #screen-day {
+    background: linear-gradient(160deg, #1a0808 0%, #0d0d0d 100%);
+    justify-content: flex-start;
+    padding-top: 30px;
+  }
+
+  .day-header {
+    text-align: center;
+    margin-bottom: 20px;
+    width: 100%;
+  }
+
+  .day-round {
+    font-size: 10px;
+    letter-spacing: 5px;
+    color: var(--or-pale);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .timer-display {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(60px, 18vw, 90px);
+    font-weight: 900;
+    color: var(--blanc);
+    text-shadow: 0 0 30px rgba(255,255,255,0.15);
+    line-height: 1;
+    margin-bottom: 4px;
+    letter-spacing: -4px;
+    transition: color 0.5s;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .timer-display.urgent { color: var(--rouge-vif); animation: flicker 0.5s infinite; }
+
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  .timer-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .btn-timer {
+    padding: 10px 20px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--blanc);
+    font-family: 'Special Elite', cursive;
+    font-size: 12px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+  .btn-timer:active { background: rgba(255,255,255,0.15); }
+
+  .suspects-header {
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: var(--or-pale);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .suspects-list {
+    width: 100%;
+    max-width: 400px;
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 16px;
+  }
+
+  .suspect-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    margin-bottom: 8px;
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+
+  .suspect-item.eliminated {
+    opacity: 0.4;
+    text-decoration: line-through;
+    border-color: rgba(139,26,26,0.3);
+    background: rgba(139,26,26,0.05);
+  }
+
+  .suspect-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(201,168,76,0.15);
+    border: 1px solid rgba(201,168,76,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    color: var(--or);
+    flex-shrink: 0;
+  }
+
+  .suspect-name {
+    flex: 1;
+    font-size: 16px;
+    color: var(--blanc);
+  }
+
+  .btn-eliminate {
+    padding: 8px 14px;
+    background: transparent;
+    border: 1px solid var(--rouge);
+    color: var(--rouge);
+    font-family: 'Special Elite', cursive;
+    font-size: 10px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+  .btn-eliminate:active { background: var(--rouge); color: white; }
+  .suspect-item.eliminated .btn-eliminate { display: none; }
+
+  .day-footer {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    gap: 10px;
+    padding-bottom: 20px;
+  }
+
+  /* ===== GAME OVER SCREEN ===== */
+  #screen-gameover {
+    background: radial-gradient(ellipse at center, #1a0808 0%, #000 70%);
+  }
+
+  .gameover-content {
+    text-align: center;
+    animation: fadeInUp 0.8s ease;
+  }
+
+  .gameover-verdict {
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: var(--papier-sombre);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .gameover-winner {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(40px, 12vw, 64px);
+    font-weight: 900;
+    font-style: italic;
+    line-height: 1;
+    margin-bottom: 16px;
+    text-shadow: 0 0 60px currentColor;
+  }
+
+  .winner-police { color: #4a9eff; }
+  .winner-mafia { color: var(--rouge-vif); }
+
+  .gameover-sub {
+    font-family: 'Libre Baskerville', serif;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--papier-sombre);
+    margin-bottom: 40px;
+  }
+
+  /* ===== FLASH ===== */
+  #flash-overlay {
+    position: fixed;
+    inset: 0;
+    background: white;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 99999;
+    transition: opacity 0.05s;
+  }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ===== UTILITIES ===== */
+  .separator {
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    margin: 8px 0 16px;
+    font-size: 18px;
+    color: var(--rouge);
+    letter-spacing: 8px;
+  }
+
+  .alert-msg {
+    background: rgba(139,26,26,0.3);
+    border: 1px solid var(--rouge);
+    padding: 10px 16px;
+    border-radius: 2px;
+    font-size: 12px;
+    color: var(--blanc);
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 12px;
+    display: none;
+  }
+
+  .night-players-visible {
+    background: rgba(168,85,247,0.1);
+    border: 1px solid rgba(168,85,247,0.4);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #c084fc;
+    display: none;
+  }
+
+  .night-players-visible.show { display: block; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--rouge); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- Flash overlay -->
+<div id="flash-overlay"></div>
+
+<!-- ===== SCREEN 1 : LAUNCH ===== -->
+<div id="screen-launch" class="screen active">
+  <div class="launch-content">
+    <div class="launch-logo">La<br>Famiglia</div>
+    <div class="launch-subtitle">
+      <span class="launch-ornament">✦</span>
+      Jeu de Rôles Mafia
+      <span class="launch-ornament">✦</span>
+    </div>
+    <div class="launch-deco">
+      <div class="launch-deco-line"></div>
+      <span style="color:var(--rouge); font-size:20px;">❧</span>
+      <div class="launch-deco-line"></div>
+    </div>
+    <button class="btn-launch" onclick="initAudio()">
+      <span>Entrer</span>
+    </button>
+    <div style="margin-top: 20px; font-size: 10px; letter-spacing: 3px; color: rgba(240,236,224,0.3);">
+      APPUYEZ POUR ACTIVER L'AUDIO
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN 2 : CONFIG ===== -->
+<div id="screen-config" class="screen">
+  <div class="config-header">
+    <div class="section-title">Les Joueurs</div>
+    <div class="section-divider">
+      <div class="divider-line"></div>
+      <div class="divider-diamond"></div>
+      <div class="divider-line"></div>
+    </div>
+  </div>
+
+  <div id="alert-config" class="alert-msg"></div>
+
+  <div class="player-list" id="player-list"></div>
+
+  <div class="config-controls" style="width:100%; max-width:400px;">
+    <button class="btn-secondary" onclick="addPlayer()">+ Ajouter un joueur</button>
+
+    <div id="roles-preview" class="roles-info"></div>
+
+    <div class="separator">· · ·</div>
+
+    <button class="btn-primary" onclick="startDistribution()">
+      Distribuer les Rôles →
+    </button>
+  </div>
+</div>
+
+<!-- ===== SCREEN 3 : REVEAL ===== -->
+<div id="screen-reveal" class="screen">
+  <div id="reveal-waiting" class="reveal-card">
+    <div class="reveal-hidden">
+      <div class="reveal-hidden-name" id="reveal-player-name">—</div>
+      <div class="reveal-hidden-sub">C'est votre tour</div>
+      <button class="btn-show-role" onclick="showRole()">
+        Découvrir mon rôle
+      </button>
+    </div>
+  </div>
+
+  <div id="reveal-showing" class="reveal-card" style="display:none">
+    <div class="reveal-progress" id="reveal-progress">Joueur 1 / 6</div>
+    <div class="dossier" id="reveal-dossier">
+      <div class="dossier-stamp">Dossier N°<span id="dossier-num">001</span></div>
+      <div class="player-name-reveal" id="dossier-player-name"></div>
+      <div id="role-image-container"></div>
+      <div class="role-name" id="dossier-role-name"></div>
+      <div class="role-desc" id="dossier-role-desc"></div>
+      <div id="dossier-extra"></div>
+    </div>
+    <button class="btn-confirm" id="btn-next-player" onclick="nextPlayer()">
+      Passer au suivant →
+    </button>
+  </div>
+</div>
+
+<!-- ===== SCREEN 4 : NIGHT ===== -->
+<div id="screen-night" class="screen">
+  <div class="night-bg"></div>
+  <div class="night-content">
+    <div class="night-phase">Phase de Nuit</div>
+    <div class="night-title">La Nuit</div>
+    <div class="night-subtitle">tombe sur la ville</div>
+
+    <div class="night-status">
+      <div class="night-instruction" id="night-instruction">
+        La ville s'endort...
+      </div>
+    </div>
+
+    <div class="night-players-visible" id="night-mafia-visible"></div>
+
+    <div class="night-indicator" id="night-indicator">
+      <div class="indicator-dot"></div>
+      <div class="indicator-text" id="indicator-text">En cours...</div>
+    </div>
+
+    <button class="btn-next-phase" id="btn-day" onclick="startDay()" disabled>
+      ☀ Passer au Jour
+    </button>
+    <button class="btn-secondary" style="width:100%" onclick="showGameMenu()">
+      Menu
+    </button>
+  </div>
+</div>
+
+<!-- ===== SCREEN 5 : DAY ===== -->
+<div id="screen-day" class="screen">
+  <div class="day-header" style="width:100%; max-width:400px;">
+    <div class="day-round" id="day-round">Tour 1 — Le Débat</div>
+    <div class="timer-display" id="timer-display">5:00</div>
+    <div class="timer-controls">
+      <button class="btn-timer" onclick="addTime(60)">+1 min</button>
+      <button class="btn-timer" id="btn-pause" onclick="togglePause()">⏸ Pause</button>
+    </div>
+  </div>
+
+  <div class="suspects-header">Suspects</div>
+
+  <div class="suspects-list" id="suspects-list"></div>
+
+  <div class="day-footer">
+    <button class="btn-secondary" style="flex:1" onclick="showGameMenu()">Menu</button>
+    <button class="btn-primary" style="flex:2" onclick="startNightFromDay()">
+      Nuit →
+    </button>
+  </div>
+</div>
+
+<!-- ===== SCREEN 6 : GAME OVER ===== -->
+<div id="screen-gameover" class="screen">
+  <div class="gameover-content">
+    <div class="gameover-verdict">Verdict Final</div>
+    <div class="gameover-winner" id="gameover-winner"></div>
+    <div class="gameover-sub" id="gameover-sub"></div>
+    <div class="section-divider" style="max-width:200px; margin: 0 auto 40px;">
+      <div class="divider-line"></div>
+      <div class="divider-diamond"></div>
+      <div class="divider-line"></div>
+    </div>
+    <button class="btn-primary" style="max-width:300px; width:100%" onclick="restartGame()">
+      Nouvelle Partie
+    </button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  STATE
+// ============================================================
+const STATE = {
+  players: [],        // { name, role, alive }
+  round: 1,
+  timerSeconds: 300,
+  timerInterval: null,
+  timerPaused: false,
+  revealIndex: 0,
+  nightSequenceRunning: false,
+  audioUnlocked: false
+};
+
+const ROLES = {
+  mafia: {
+    name: 'Mafieux',
+    emoji: '🔫',
+    color: '#c0392b',
+    desc: 'Vous faites partie de la Famiglia. La nuit, vous vous réveillez en silence et identifiez vos complices.',
+    image: 'role-mafia.png',
+    cssClass: 'role-mafia'
+  },
+  police: {
+    name: 'Agent de Police',
+    emoji: '🚔',
+    color: '#4a9eff',
+    desc: 'Vous êtes un citoyen honnête. Pendant le jour, débattez et votez pour éliminer les suspects.',
+    image: 'role-police.png',
+    cssClass: 'role-police'
+  },
+  undercover: {
+    name: 'Infiltré',
+    emoji: '🕵️',
+    color: '#a855f7',
+    desc: 'Vous êtes un agent secret. La nuit, vous ouvrez les yeux pour identifier les Mafieux — mais eux ne vous voient pas.',
+    image: 'role-undercover.png',
+    cssClass: 'role-undercover'
+  }
+};
+
+// ============================================================
+//  AUDIO ENGINE
+// ============================================================
+const AUDIO = {
+  sounds: {},
+  currentAmbiance: null,
+  voiceQueue: Promise.resolve(),
+
+  files: {
+    ambiance:     'ambiance.mp3',
+    ambianceNuit: 'ambiance-nuit.mp3',
+    debut:        'voix-debut.mp3',
+    nuit:         'voix-nuit.mp3',
+    mafiaReveil:  'voix-mafia-reveil.mp3',
+    mafiaDodo:    'voix-mafia-dodo.mp3',
+    underReveil:  'voix-under-reveil.mp3',
+    jour:         'voix-jour.mp3',
+    soixante:     'voix-60s.mp3',
+    chronoFin:    'voix-chrono-fin.mp3'
+  },
+
+  fallbacks: {
+    debut: 4000,
+    nuit: 3000,
+    mafiaReveil: 4000,
+    mafiaDodo: 3000,
+    underReveil: 4000,
+    jour: 3000,
+    soixante: 3000,
+    chronoFin: 3000
+  },
+
+  init() {
+    // Pré-chargement de tous les sons
+    Object.entries(this.files).forEach(([key, file]) => {
+      const audio = new Audio();
+      audio.preload = 'auto';
+      audio.src = file;
+      // Warm-up pour iOS
+      audio.volume = 0;
+      audio.play().catch(() => {});
+      audio.pause();
+      audio.currentTime = 0;
+      audio.volume = 1;
+      this.sounds[key] = audio;
+    });
+
+    // Loop ambiance
+    this.sounds.ambiance.loop = true;
+    this.sounds.ambianceNuit.loop = true;
+  },
+
+  playAmbiance(type = 'day') {
+    // Arrêter l'ambiance actuelle
+    if (this.currentAmbiance) {
+      this.sounds[this.currentAmbiance].pause();
+      this.sounds[this.currentAmbiance].currentTime = 0;
+    }
+
+    const key = type === 'night' ? 'ambianceNuit' : 'ambiance';
+    this.sounds[key].currentTime = 0;
+    this.sounds[key].play().catch(() => {});
+    this.currentAmbiance = key;
+  },
+
+  stopAmbiance() {
+    if (this.currentAmbiance) {
+      this.sounds[this.currentAmbiance].pause();
+    }
+  },
+
+  pauseAmbiance() {
+    if (this.currentAmbiance) {
+      this.sounds[this.currentAmbiance].pause();
+    }
+  },
+
+  resumeAmbiance() {
+    if (this.currentAmbiance) {
+      this.sounds[this.currentAmbiance].play().catch(() => {});
+    }
+  },
+
+  // Jouer une voix off et retourner une Promise
+  playVoice(key) {
+    const audio = this.sounds[key];
+    if (!audio) return Promise.resolve();
+
+    this.pauseAmbiance();
+
+    return new Promise(resolve => {
+      const fallback = this.fallbacks[key] || 4000;
+
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
+
+      let resolved = false;
+      const done = () => {
+        if (resolved) return;
+        resolved = true;
+        this.resumeAmbiance();
+        resolve();
+      };
+
+      audio.onended = done;
+      setTimeout(done, fallback + (audio.duration ? audio.duration * 1000 : 0));
+    });
+  },
+
+  // Synthèse vocale
+  speak(text) {
+    this.pauseAmbiance();
+    return new Promise(resolve => {
+      if (!window.speechSynthesis) { this.resumeAmbiance(); resolve(); return; }
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'fr-FR';
+      utterance.rate = 0.85;
+      utterance.pitch = 0.9;
+      utterance.onend = () => { this.resumeAmbiance(); resolve(); };
+      utterance.onerror = () => { this.resumeAmbiance(); resolve(); };
+      window.speechSynthesis.speak(utterance);
+    });
+  }
+};
+
+// ============================================================
+//  INIT & NAVIGATION
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function initAudio() {
+  AUDIO.init();
+  AUDIO.playAmbiance('day');
+  STATE.audioUnlocked = true;
+  showScreen('screen-config');
+  renderPlayerList();
+  // Joueurs par défaut pour faciliter le test
+  if (STATE.players.length === 0) {
+    addPlayer(); addPlayer(); addPlayer();
+  }
+}
+
+// ============================================================
+//  CONFIG
+// ============================================================
+function addPlayer(nameVal = '') {
+  const idx = STATE.players.length;
+  STATE.players.push({ name: nameVal, role: null, alive: true });
+  renderPlayerList();
+  updateRolesPreview();
+}
+
+function removePlayer(idx) {
+  STATE.players.splice(idx, 1);
+  renderPlayerList();
+  updateRolesPreview();
+}
+
+function renderPlayerList() {
+  const list = document.getElementById('player-list');
+  list.innerHTML = '';
+  STATE.players.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'player-item';
+    div.innerHTML = `
+      <div class="player-number">${i + 1}</div>
+      <input type="text" placeholder="Nom du joueur..." value="${p.name}"
+        oninput="STATE.players[${i}].name = this.value; updateRolesPreview()">
+      ${STATE.players.length > 3 ? `<button class="btn-delete" onclick="removePlayer(${i})">✕</button>` : ''}
+    `;
+    list.appendChild(div);
+  });
+}
+
+function updateRolesPreview() {
+  const n = STATE.players.length;
+  const el = document.getElementById('roles-preview');
+  if (n < 3) { el.innerHTML = ''; return; }
+
+  const nMafia = Math.max(1, Math.floor(n / 4));
+  const nUnder = n >= 5 ? 1 : 0;
+  const nPolice = n - nMafia - nUnder;
+
+  el.innerHTML = `
+    <strong>Distribution automatique :</strong><br>
+    🔫 ${nMafia} Mafieux · 🚔 ${nPolice} Police${nUnder ? ' · 🕵️ 1 Infiltré' : ''}
+  `;
+}
+
+function getRoleDistribution(n) {
+  const nMafia = Math.max(1, Math.floor(n / 4));
+  const nUnder = n >= 5 ? 1 : 0;
+  const nPolice = n - nMafia - nUnder;
+  const roles = [];
+  for (let i = 0; i < nMafia; i++) roles.push('mafia');
+  for (let i = 0; i < nPolice; i++) roles.push('police');
+  for (let i = 0; i < nUnder; i++) roles.push('undercover');
+  return shuffle(roles);
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startDistribution() {
+  const names = STATE.players.map((p, i) => p.name.trim() || `Joueur ${i + 1}`);
+  if (names.length < 3) {
+    showAlert('alert-config', 'Il faut au moins 3 joueurs !');
+    return;
+  }
+
+  // Réinitialiser
+  const roles = getRoleDistribution(names.length);
+  STATE.players = names.map((name, i) => ({ name, role: roles[i], alive: true }));
+  STATE.revealIndex = 0;
+  STATE.round = 1;
+
+  showScreen('screen-reveal');
+  showRevealWaiting();
+}
+
+// ============================================================
+//  REVEAL
+// ============================================================
+function showRevealWaiting() {
+  const player = STATE.players[STATE.revealIndex];
+  document.getElementById('reveal-player-name').textContent = player.name;
+  document.getElementById('reveal-waiting').style.display = '';
+  document.getElementById('reveal-showing').style.display = 'none';
+}
+
+function showRole() {
+  const player = STATE.players[STATE.revealIndex];
+  const role = ROLES[player.role];
+  const total = STATE.players.length;
+
+  document.getElementById('reveal-waiting').style.display = 'none';
+  document.getElementById('reveal-showing').style.display = '';
+
+  document.getElementById('reveal-progress').textContent =
+    `Joueur ${STATE.revealIndex + 1} sur ${total}`;
+  document.getElementById('dossier-num').textContent =
+    String(STATE.revealIndex + 1).padStart(3, '0');
+  document.getElementById('dossier-player-name').textContent = player.name;
+  document.getElementById('dossier-role-name').textContent = role.name;
+  document.getElementById('dossier-role-desc').textContent = role.desc;
+
+  const dossier = document.getElementById('reveal-dossier');
+  dossier.className = `dossier ${role.cssClass}`;
+
+  // Image ou emoji
+  const imgCont = document.getElementById('role-image-container');
+  const img = new Image();
+  img.src = role.image;
+  img.onload = () => {
+    imgCont.innerHTML = `<img src="${role.image}" class="role-image" alt="${role.name}">`;
+  };
+  img.onerror = () => {
+    imgCont.innerHTML = `<div class="role-image-placeholder ${role.cssClass}">${role.emoji}</div>`;
+  };
+
+  // Info supplémentaire pour l'infiltré et la mafia
+  const extra = document.getElementById('dossier-extra');
+  if (player.role === 'undercover') {
+    const mafieux = STATE.players.filter(p => p.role === 'mafia').map(p => p.name);
+    extra.innerHTML = `<div style="background:rgba(168,85,247,0.1); border:1px solid rgba(168,85,247,0.4); border-radius:4px; padding:10px; font-size:12px; color:#c084fc; margin-top:12px;">
+      🕵️ Les Mafieux sont : <strong>${mafieux.join(', ')}</strong>
+    </div>`;
+  } else if (player.role === 'mafia') {
+    const autres = STATE.players.filter(p => p.role === 'mafia' && p.name !== player.name).map(p => p.name);
+    extra.innerHTML = autres.length > 0
+      ? `<div style="background:rgba(192,57,43,0.1); border:1px solid rgba(192,57,43,0.4); border-radius:4px; padding:10px; font-size:12px; color:#e57373; margin-top:12px;">
+          🔫 Vos complices : <strong>${autres.join(', ')}</strong>
+        </div>`
+      : '';
+  } else {
+    extra.innerHTML = '';
+  }
+
+  const isLast = STATE.revealIndex === total - 1;
+  const btn = document.getElementById('btn-next-player');
+  btn.textContent = isLast ? '🌙 Commencer la Nuit →' : 'Passer au suivant →';
+}
+
+function nextPlayer() {
+  STATE.revealIndex++;
+  if (STATE.revealIndex >= STATE.players.length) {
+    // Tous les rôles distribués → passer à la nuit
+    startNight();
+  } else {
+    showRevealWaiting();
+  }
+}
+
+// ============================================================
+//  NIGHT PHASE
+// ============================================================
+async function startNight() {
+  showScreen('screen-night');
+  AUDIO.playAmbiance('night');
+  document.getElementById('btn-day').disabled = true;
+  document.getElementById('night-indicator').classList.remove('visible');
+  document.getElementById('night-mafia-visible').classList.remove('show');
+
+  await runNightSequence();
+}
+
+async function runNightSequence() {
+  STATE.nightSequenceRunning = true;
+
+  setNightInstruction('Tout le monde ferme les yeux...');
+  await AUDIO.playVoice('debut');
+  await sleep(500);
+
+  setNightInstruction('La nuit tombe sur la ville...');
+  await AUDIO.playVoice('nuit');
+  await sleep(800);
+
+  // Mafia se réveille
+  setNightInstruction('🔫 La Mafia se réveille...\nIdentifiez-vous en silence.');
+  showIndicator('La Mafia est éveillée');
+  await AUDIO.playVoice('mafiaReveil');
+  await sleep(5000);
+
+  // Mafia se rendort
+  setNightInstruction('La Mafia se rendort...');
+  await AUDIO.playVoice('mafiaDodo');
+  await sleep(800);
+
+  // Vérifier s'il y a un infiltré vivant
+  const undercoverAlive = STATE.players.find(p => p.role === 'undercover' && p.alive);
+  if (undercoverAlive) {
+    setNightInstruction(`🕵️ L'Infiltré ouvre les yeux...\nObservez en silence.`);
+    showIndicator("L'Infiltré est éveillé");
+    await AUDIO.playVoice('underReveil');
+    await sleep(4000);
+    setNightInstruction('L\'Infiltré se rendort...');
+    await sleep(1500);
+  }
+
+  // Fin de nuit
+  setNightInstruction('Tout le monde peut ouvrir les yeux.');
+  hideIndicator();
+  await AUDIO.playVoice('jour');
+  await sleep(500);
+
+  STATE.nightSequenceRunning = false;
+  document.getElementById('btn-day').disabled = false;
+  showIndicator('Prêt pour le débat');
+}
+
+function setNightInstruction(text) {
+  document.getElementById('night-instruction').textContent = text;
+}
+
+function showIndicator(text) {
+  document.getElementById('indicator-text').textContent = text;
+  document.getElementById('night-indicator').classList.add('visible');
+}
+
+function hideIndicator() {
+  document.getElementById('night-indicator').classList.remove('visible');
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ============================================================
+//  DAY PHASE
+// ============================================================
+function startDay() {
+  AUDIO.playAmbiance('day');
+  document.getElementById('day-round').textContent = `Tour ${STATE.round} — Le Débat`;
+  STATE.timerSeconds = 300;
+  STATE.timerPaused = false;
+  updateTimerDisplay();
+  renderSuspects();
+  showScreen('screen-day');
+  startTimer();
+}
+
+function startNightFromDay() {
+  stopTimer();
+  STATE.round++;
+  startNight();
+}
+
+function startTimer() {
+  stopTimer();
+  STATE.timerInterval = setInterval(() => {
+    if (STATE.timerPaused) return;
+    STATE.timerSeconds--;
+    updateTimerDisplay();
+
+    if (STATE.timerSeconds === 60) {
+      AUDIO.playVoice('soixante');
+    }
+    if (STATE.timerSeconds <= 0) {
+      stopTimer();
+      AUDIO.playVoice('chronoFin');
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (STATE.timerInterval) {
+    clearInterval(STATE.timerInterval);
+    STATE.timerInterval = null;
+  }
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(Math.abs(STATE.timerSeconds) / 60);
+  const s = Math.abs(STATE.timerSeconds) % 60;
+  const display = document.getElementById('timer-display');
+  display.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+  display.classList.toggle('urgent', STATE.timerSeconds <= 30 && STATE.timerSeconds > 0);
+}
+
+function addTime(seconds) {
+  STATE.timerSeconds += seconds;
+  updateTimerDisplay();
+}
+
+function togglePause() {
+  STATE.timerPaused = !STATE.timerPaused;
+  const btn = document.getElementById('btn-pause');
+  if (STATE.timerPaused) {
+    btn.textContent = '▶ Reprendre';
+    AUDIO.pauseAmbiance();
+  } else {
+    btn.textContent = '⏸ Pause';
+    AUDIO.resumeAmbiance();
+  }
+}
+
+function renderSuspects() {
+  const list = document.getElementById('suspects-list');
+  list.innerHTML = '';
+  STATE.players.forEach((player, i) => {
+    if (!player.alive) {
+      const div = document.createElement('div');
+      div.className = 'suspect-item eliminated';
+      div.innerHTML = `
+        <div class="suspect-avatar">${player.name[0].toUpperCase()}</div>
+        <div class="suspect-name">${player.name}</div>
+        <div style="font-size:11px; color:var(--rouge); letter-spacing:2px;">ÉLIMINÉ</div>
+      `;
+      list.appendChild(div);
+      return;
+    }
+    const div = document.createElement('div');
+    div.className = 'suspect-item';
+    div.innerHTML = `
+      <div class="suspect-avatar">${player.name[0].toUpperCase()}</div>
+      <div class="suspect-name">${player.name}</div>
+      <button class="btn-eliminate" onclick="eliminatePlayer(${i})">Éliminer</button>
+    `;
+    list.appendChild(div);
+  });
+}
+
+async function eliminatePlayer(idx) {
+  const player = STATE.players[idx];
+  if (!player.alive) return;
+
+  // Flash visuel
+  flashScreen();
+
+  player.alive = false;
+  renderSuspects();
+
+  // Annonce synthèse vocale
+  const roleLabel = ROLES[player.role].name;
+  stopTimer();
+  AUDIO.pauseAmbiance();
+  await AUDIO.speak(`${player.name} était ${roleLabel}.`);
+  AUDIO.resumeAmbiance();
+  startTimer();
+
+  // Vérifier victoire
+  checkVictory();
+}
+
+function checkVictory() {
+  const alivePlayers = STATE.players.filter(p => p.alive);
+  const aliveMafia = alivePlayers.filter(p => p.role === 'mafia');
+  const aliveGood = alivePlayers.filter(p => p.role !== 'mafia');
+
+  if (aliveMafia.length === 0) {
+    // Police gagne
+    stopTimer();
+    setTimeout(() => showGameOver('police'), 1000);
+  } else if (aliveMafia.length >= aliveGood.length) {
+    // Mafia gagne (égalité ou majorité)
+    stopTimer();
+    setTimeout(() => showGameOver('mafia'), 1000);
+  }
+}
+
+function showGameOver(winner) {
+  AUDIO.stopAmbiance();
+  const titleEl = document.getElementById('gameover-winner');
+  const subEl = document.getElementById('gameover-sub');
+
+  if (winner === 'police') {
+    titleEl.textContent = 'La Police Gagne';
+    titleEl.className = 'gameover-winner winner-police';
+    subEl.textContent = 'La Famiglia a été démantelée. La ville peut dormir en paix.';
+  } else {
+    titleEl.textContent = 'La Mafia Gagne';
+    titleEl.className = 'gameover-winner winner-mafia';
+    subEl.textContent = 'La Famiglia contrôle la ville. La corruption règne.';
+  }
+
+  showScreen('screen-gameover');
+}
+
+function restartGame() {
+  STATE.players = [];
+  STATE.round = 1;
+  AUDIO.playAmbiance('day');
+  showScreen('screen-config');
+  renderPlayerList();
+  // Garder les anciens noms
+  STATE.players = [];
+  renderPlayerList();
+  addPlayer(); addPlayer(); addPlayer();
+}
+
+function showGameMenu() {
+  stopTimer();
+  AUDIO.playAmbiance('day');
+  showScreen('screen-day');
+  renderSuspects();
+  updateTimerDisplay();
+}
+
+// ============================================================
+//  UTILITIES
+// ============================================================
+function flashScreen() {
+  const overlay = document.getElementById('flash-overlay');
+  overlay.style.opacity = '1';
+  setTimeout(() => { overlay.style.opacity = '0'; }, 80);
+}
+
+function showAlert(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+</script>
+</body>
+</html>
