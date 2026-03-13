@@ -1,740 +1,751 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mafia Noir</title>
 <style>
-  :root {
-    --gold:#c9a84c;
-    --dark:#0a0a0f;
-    --card:#13131a;
-    --red:#c0392b;
-    --blue:#2980b9;
-    --green:#27ae60;
-  }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:var(--dark);color:#eee;font-family:'Georgia',serif;min-height:100vh;overflow-x:hidden;}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-  /* SCREENS */
-  .screen{display:none;min-height:100vh;padding:20px;}
-  .screen.active{display:flex;flex-direction:column;align-items:center;}
+body {
+  font-family: 'Georgia', serif;
+  background: #0a0a0f;
+  color: #e8d5b0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-  /* LAUNCH */
-  #screen-launch{justify-content:center;background:radial-gradient(ellipse at center,#1a1a2e 0%,#0a0a0f 70%);}
-  #screen-launch h1{font-size:3rem;color:var(--gold);text-shadow:0 0 30px rgba(201,168,76,.6);letter-spacing:4px;margin-bottom:10px;}
-  #screen-launch p{color:#888;font-style:italic;margin-bottom:40px;}
-  .btn-launch{background:linear-gradient(135deg,var(--gold),#a07830);color:#000;border:none;padding:16px 40px;font-size:1.2rem;font-family:Georgia,serif;border-radius:4px;cursor:pointer;letter-spacing:2px;box-shadow:0 0 20px rgba(201,168,76,.4);}
-  .btn-launch:hover{transform:scale(1.05);}
+.screen { display: none; min-height: 100vh; padding: 20px; }
+.screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
-  /* CONFIG */
-  #screen-config{background:var(--dark);}
-  #screen-config h2{color:var(--gold);font-size:1.8rem;margin-bottom:20px;text-align:center;}
-  #playersList{width:100%;max-width:480px;margin-bottom:20px;}
-  .player-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-  .player-row input{flex:1;background:#1a1a2e;border:1px solid #333;color:#eee;padding:10px 14px;border-radius:4px;font-size:1rem;font-family:Georgia,serif;}
-  .player-row input::placeholder{color:#555;}
-  .player-row input:focus{outline:none;border-color:var(--gold);}
-  .btn-remove{background:#c0392b;border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1.1rem;line-height:1;}
-  .btn-add{background:transparent;border:2px dashed #444;color:#888;width:100%;max-width:480px;padding:10px;border-radius:4px;cursor:pointer;font-size:0.95rem;margin-bottom:20px;}
-  .btn-add:hover{border-color:var(--gold);color:var(--gold);}
-  .roles-summary{background:var(--card);border:1px solid #222;border-radius:8px;padding:16px;width:100%;max-width:480px;margin-bottom:20px;}
-  .roles-summary h3{color:var(--gold);margin-bottom:10px;font-size:1rem;}
-  .role-tag{display:inline-block;padding:4px 10px;border-radius:12px;font-size:0.8rem;margin:3px;}
-  .role-tag.mafia{background:#c0392b33;border:1px solid #c0392b;color:#e74c3c;}
-  .role-tag.police{background:#2980b933;border:1px solid #2980b9;color:#3498db;}
-  .role-tag.citoyen{background:#27ae6033;border:1px solid #27ae60;color:#2ecc71;}
-  .role-tag.under{background:#8e44ad33;border:1px solid #8e44ad;color:#9b59b6;}
-  .btn-start{background:linear-gradient(135deg,var(--gold),#a07830);color:#000;border:none;padding:14px 40px;font-size:1.1rem;font-family:Georgia,serif;border-radius:4px;cursor:pointer;letter-spacing:2px;}
-  .btn-start:disabled{opacity:.4;cursor:not-allowed;}
+/* LAUNCH */
+.launch-box {
+  text-align: center;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 2px solid #8b6914;
+  border-radius: 16px;
+  padding: 50px 40px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 0 40px rgba(139,105,20,0.3);
+}
+.launch-hat { font-size: 80px; margin-bottom: 20px; }
+.launch-title {
+  font-size: 42px;
+  font-weight: bold;
+  color: #d4a017;
+  letter-spacing: 6px;
+  margin-bottom: 8px;
+}
+.launch-sub { font-size: 13px; letter-spacing: 3px; color: #8b7355; margin-bottom: 30px; }
+.launch-divider { width: 60px; height: 2px; background: #8b6914; margin: 0 auto 30px; }
 
-  /* ROLE REVEAL */
-  #screen-reveal{background:var(--dark);justify-content:center;}
-  .reveal-card{background:var(--card);border:2px solid var(--gold);border-radius:16px;padding:30px;max-width:360px;width:100%;text-align:center;box-shadow:0 0 40px rgba(201,168,76,.2);}
-  .reveal-card h2{color:var(--gold);margin-bottom:6px;font-size:1.3rem;}
-  .reveal-card .player-name{font-size:1.8rem;margin-bottom:20px;color:#fff;}
-  .reveal-card img{width:180px;height:180px;object-fit:cover;border-radius:12px;border:2px solid #333;margin-bottom:20px;}
-  .reveal-card .role-name{font-size:1.6rem;font-weight:bold;margin-bottom:8px;}
-  .reveal-card .role-desc{color:#aaa;font-size:0.9rem;margin-bottom:24px;font-style:italic;}
-  .btn-seen{background:var(--gold);color:#000;border:none;padding:12px 30px;border-radius:4px;cursor:pointer;font-size:1rem;}
+.btn-primary {
+  background: linear-gradient(135deg, #8b6914, #d4a017);
+  color: #0a0a0f;
+  border: none;
+  padding: 16px 40px;
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: 12px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212,160,23,0.4); }
 
-  /* NIGHT */
-  #screen-night{background:#050510;justify-content:center;}
-  .night-box{text-align:center;max-width:400px;}
-  .night-box h2{color:var(--gold);font-size:2rem;margin-bottom:10px;}
-  .night-box p{color:#888;margin-bottom:30px;font-style:italic;}
-  .night-instruction{background:#0d0d1a;border:1px solid #222;border-radius:12px;padding:24px;margin-bottom:20px;}
-  .night-instruction img{width:120px;height:120px;object-fit:cover;border-radius:50%;border:2px solid #333;margin-bottom:16px;}
-  .night-instruction p{color:#ccc;font-size:1rem;line-height:1.6;}
-  #btnNightNext{background:linear-gradient(135deg,var(--gold),#a07830);color:#000;border:none;padding:12px 32px;border-radius:4px;cursor:pointer;font-size:1rem;margin-top:10px;display:none;}
+.btn-secondary {
+  background: transparent;
+  color: #8b7355;
+  border: 1px solid #8b7355;
+  padding: 12px 30px;
+  font-size: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s;
+}
+.btn-secondary:hover { color: #d4a017; border-color: #d4a017; }
 
-  /* DAY */
-  #screen-day{background:var(--dark);}
-  #screen-day h2{color:var(--gold);font-size:1.8rem;margin-bottom:6px;text-align:center;}
-  .day-subtitle{color:#888;font-style:italic;margin-bottom:20px;}
-  .players-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;width:100%;max-width:600px;margin-bottom:20px;}
-  .player-card{background:var(--card);border:1px solid #222;border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:all .2s;}
-  .player-card:hover{border-color:var(--gold);}
-  .player-card.selected{border-color:var(--red);background:#1a0808;}
-  .player-card.dead{opacity:.35;cursor:not-allowed;filter:grayscale(1);}
-  .player-card img{width:60px;height:60px;object-fit:cover;border-radius:50%;border:2px solid #333;margin-bottom:8px;}
-  .player-card .p-name{font-size:0.9rem;color:#ddd;}
-  .player-card .p-role{font-size:0.7rem;color:#666;margin-top:2px;}
-  .timer-bar{width:100%;max-width:600px;background:#111;border-radius:4px;height:8px;margin-bottom:16px;overflow:hidden;}
-  .timer-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--gold),var(--red));transition:width 1s linear;}
-  .timer-text{color:var(--gold);font-size:1.2rem;margin-bottom:16px;}
-  .vote-section{width:100%;max-width:600px;margin-bottom:16px;}
-  .vote-section h3{color:#ccc;margin-bottom:10px;font-size:1rem;}
-  .btn-vote{background:var(--red);color:#fff;border:none;padding:12px 30px;border-radius:4px;cursor:pointer;font-size:1rem;margin-right:10px;}
-  .btn-vote:disabled{opacity:.4;}
-  .btn-skip{background:#333;color:#aaa;border:none;padding:12px 20px;border-radius:4px;cursor:pointer;font-size:1rem;}
+/* CONFIG */
+.config-box {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 2px solid #8b6914;
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 0 40px rgba(139,105,20,0.3);
+}
+.config-title { font-size: 24px; color: #d4a017; letter-spacing: 3px; margin-bottom: 30px; text-align: center; }
 
-  /* ELIM */
-  #screen-elim{background:var(--dark);justify-content:center;}
-  .elim-box{text-align:center;max-width:380px;}
-  .elim-box img{width:160px;height:160px;object-fit:cover;border-radius:50%;border:3px solid var(--red);margin-bottom:20px;box-shadow:0 0 30px rgba(192,57,43,.5);}
-  .elim-box h2{color:var(--red);font-size:1.6rem;margin-bottom:8px;}
-  .elim-box .elim-role{font-size:1.3rem;margin-bottom:6px;}
-  .elim-box .elim-was{color:#888;margin-bottom:30px;font-style:italic;}
-  #btnAfterElim{background:var(--gold);color:#000;border:none;padding:12px 30px;border-radius:4px;cursor:pointer;font-size:1rem;}
+.player-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.player-input {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid #8b6914;
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: #e8d5b0;
+  font-size: 14px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.player-input:focus { border-color: #d4a017; }
+.player-input::placeholder { color: #4a4a5a; }
 
-  /* END */
-  #screen-end{background:radial-gradient(ellipse at center,#1a1a2e,var(--dark));justify-content:center;}
-  .end-box{text-align:center;max-width:440px;}
-  .end-box h1{font-size:2.5rem;margin-bottom:10px;}
-  .end-box h1.win-police{color:var(--blue);}
-  .end-box h1.win-mafia{color:var(--red);}
-  .end-box p{color:#aaa;margin-bottom:30px;font-style:italic;}
-  .final-list{width:100%;margin-bottom:30px;}
-  .final-player{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:8px;padding:10px 14px;margin-bottom:8px;}
-  .final-player img{width:44px;height:44px;object-fit:cover;border-radius:50%;}
-  .final-player .fp-name{flex:1;font-size:1rem;}
-  .final-player .fp-role{font-size:0.85rem;padding:3px 10px;border-radius:10px;}
-  .fp-role.mafia{background:#c0392b33;color:#e74c3c;border:1px solid #c0392b;}
-  .fp-role.police{background:#2980b933;color:#3498db;border:1px solid #2980b9;}
-  .fp-role.citoyen{background:#27ae6033;color:#2ecc71;border:1px solid #27ae60;}
-  .fp-role.under{background:#8e44ad33;color:#9b59b6;border:1px solid #8e44ad;}
-  .btn-restart{background:linear-gradient(135deg,var(--gold),#a07830);color:#000;border:none;padding:14px 40px;border-radius:4px;cursor:pointer;font-size:1.1rem;letter-spacing:2px;}
+.player-count-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+  padding: 14px 18px;
+  border: 1px solid #333;
+}
+.count-label { font-size: 13px; color: #8b7355; letter-spacing: 1px; }
+.count-controls { display: flex; align-items: center; gap: 16px; }
+.count-btn {
+  background: #8b6914;
+  color: #fff;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.count-btn:hover { background: #d4a017; }
+.count-val { font-size: 22px; color: #d4a017; font-weight: bold; min-width: 30px; text-align: center; }
 
-  /* FLASH */
-  #flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:999;transition:opacity .1s;}
+/* ROLES */
+.roles-box {
+  max-width: 600px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.roles-title { font-size: 26px; color: #d4a017; letter-spacing: 3px; text-align: center; }
+.roles-subtitle { text-align: center; color: #8b7355; font-size: 13px; letter-spacing: 1px; }
 
-  /* LOADING */
-  #screen-loading{background:var(--dark);justify-content:center;align-items:center;}
-  .loading-text{color:var(--gold);font-size:1.2rem;text-align:center;}
-  .loading-bar{width:260px;height:6px;background:#111;border-radius:3px;margin-top:20px;overflow:hidden;}
-  .loading-fill{height:100%;background:var(--gold);width:0%;transition:width .3s;}
+.role-card {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 2px solid #333;
+  border-radius: 16px;
+  padding: 28px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s;
+}
+.role-card.revealed { border-color: #d4a017; }
+.role-card .player-name { font-size: 18px; color: #8b7355; margin-bottom: 16px; letter-spacing: 2px; }
+.role-card .role-emoji { font-size: 60px; margin-bottom: 12px; filter: blur(6px); transition: filter 0.5s; }
+.role-card.revealed .role-emoji { filter: none; }
+.role-card .role-name { font-size: 22px; font-weight: bold; margin-bottom: 8px; opacity: 0; transition: opacity 0.5s; }
+.role-card.revealed .role-name { opacity: 1; }
+.role-card .role-desc { font-size: 13px; color: #8b7355; opacity: 0; transition: opacity 0.5s; }
+.role-card.revealed .role-desc { opacity: 1; }
+.reveal-btn {
+  background: linear-gradient(135deg, #8b6914, #d4a017);
+  color: #0a0a0f;
+  border: none;
+  padding: 10px 30px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: transform 0.2s;
+}
+.reveal-btn:hover { transform: scale(1.05); }
+
+/* GAME */
+.game-box {
+  max-width: 600px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.phase-banner {
+  text-align: center;
+  padding: 20px;
+  border-radius: 12px;
+  font-size: 28px;
+  font-weight: bold;
+  letter-spacing: 3px;
+}
+.phase-banner.night { background: linear-gradient(135deg, #0d0d1a, #1a1a3e); color: #6677ff; border: 2px solid #334; }
+.phase-banner.day { background: linear-gradient(135deg, #2a1a00, #3a2800); color: #ffcc44; border: 2px solid #554; }
+
+.timer-box {
+  text-align: center;
+  font-size: 48px;
+  font-weight: bold;
+  color: #d4a017;
+  padding: 10px;
+}
+.timer-box.urgent { color: #ff4444; animation: pulse 0.5s infinite alternate; }
+@keyframes pulse { from { opacity: 1; } to { opacity: 0.5; } }
+
+.players-list { display: flex; flex-direction: column; gap: 8px; }
+.player-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 14px 18px;
+  transition: all 0.3s;
+}
+.player-row.eliminated { opacity: 0.4; text-decoration: line-through; border-color: #ff4444; }
+.player-info { display: flex; align-items: center; gap: 12px; }
+.player-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: bold; color: #0a0a0f;
+}
+.player-row-name { font-size: 15px; font-weight: bold; }
+.player-status { font-size: 12px; color: #8b7355; }
+
+.btn-eliminate {
+  background: #8b1a1a;
+  color: #ff9999;
+  border: 1px solid #cc3333;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+.btn-eliminate:hover { background: #cc3333; }
+.btn-eliminate:disabled { opacity: 0.3; cursor: default; }
+
+.action-row {
+  display: flex;
+  gap: 12px;
+}
+.action-row .btn-primary { margin: 0; }
+
+/* END */
+.end-box {
+  text-align: center;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 2px solid #8b6914;
+  border-radius: 16px;
+  padding: 50px 40px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 0 60px rgba(139,105,20,0.4);
+}
+.end-trophy { font-size: 80px; margin-bottom: 20px; }
+.end-title { font-size: 32px; color: #d4a017; font-weight: bold; letter-spacing: 4px; margin-bottom: 16px; }
+.end-winner { font-size: 20px; color: #e8d5b0; margin-bottom: 30px; }
+.end-stats { text-align: left; background: rgba(255,255,255,0.03); border-radius: 10px; padding: 20px; margin-bottom: 30px; }
+.end-stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #222; font-size: 14px; }
+.end-stat-row:last-child { border-bottom: none; }
+
+/* LOG */
+.log-box {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 16px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 13px;
+  color: #8b7355;
+  line-height: 1.8;
+}
+
+.round-badge {
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #8b7355;
+  padding: 8px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 6px;
+}
+
+/* MODAL */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 2px solid #8b6914;
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+}
+.modal-emoji { font-size: 60px; margin-bottom: 16px; }
+.modal-title { font-size: 22px; color: #d4a017; margin-bottom: 12px; font-weight: bold; }
+.modal-text { color: #8b7355; font-size: 14px; margin-bottom: 24px; line-height: 1.6; }
+.modal-btns { display: flex; gap: 12px; }
+.modal-btns .btn-primary { margin: 0; }
 </style>
 </head>
 <body>
 
-<!-- FLASH -->
-<div id="flash"></div>
-
-<!-- SCREEN LAUNCH -->
-<div id="screen-launch" class="screen active">
-  <h1>⚫ MAFIA NOIR</h1>
-  <p>Le jeu des secrets et des mensonges</p>
-  <button class="btn-launch" onclick="onLaunch()">COMMENCER LA PARTIE</button>
-</div>
-
-<!-- SCREEN LOADING -->
-<div id="screen-loading" class="screen">
-  <div class="loading-text">Chargement des ressources audio…</div>
-  <div class="loading-bar"><div class="loading-fill" id="loadingFill"></div></div>
-</div>
-
-<!-- SCREEN CONFIG -->
-<div id="screen-config" class="screen">
-  <h2>👥 Joueurs</h2>
-  <div id="playersList"></div>
-  <button class="btn-add" onclick="addPlayer('')">+ Ajouter un joueur</button>
-  <div class="roles-summary" id="rolesSummary"></div>
-  <button class="btn-start" id="btnStart" onclick="startGame()">LANCER LA PARTIE</button>
-</div>
-
-<!-- SCREEN REVEAL -->
-<div id="screen-reveal" class="screen">
-  <div class="reveal-card">
-    <h2>Ton rôle secret</h2>
-    <div class="player-name" id="revealName"></div>
-    <img id="revealImg" src="" alt="role"/>
-    <div class="role-name" id="revealRole"></div>
-    <div class="role-desc" id="revealDesc"></div>
-    <button class="btn-seen" onclick="nextReveal()">J'ai vu mon rôle ✓</button>
+<!-- ÉCRAN 1 : LAUNCH -->
+<div class="screen active" id="screen-launch">
+  <div class="launch-box">
+    <div class="launch-hat">🎩</div>
+    <div class="launch-title">MAFIA NOIR</div>
+    <div class="launch-sub">JEU DE RÔLES & DE DÉDUCTION</div>
+    <div class="launch-divider"></div>
+    <button class="btn-primary" onclick="showScreen('screen-config')">COMMENCER</button>
+    <button class="btn-secondary" id="btnResume" onclick="onResume()" style="display:none">▶ REPRENDRE LA PARTIE</button>
   </div>
 </div>
 
-<!-- SCREEN NIGHT -->
-<div id="screen-night" class="screen">
-  <div class="night-box">
-    <h2>🌙 Phase de Nuit</h2>
-    <p>Le village s'endort…</p>
-    <div class="night-instruction" id="nightInstruction">
-      <img id="nightImg" src="" alt=""/>
-      <p id="nightText"></p>
+<!-- ÉCRAN 2 : CONFIG -->
+<div class="screen" id="screen-config">
+  <div class="config-box">
+    <div class="config-title">🃏 CONFIGURATION</div>
+
+    <div class="player-count-row">
+      <div class="count-label">NOMBRE DE JOUEURS</div>
+      <div class="count-controls">
+        <button class="count-btn" onclick="changeCount(-1)">−</button>
+        <div class="count-val" id="countVal">4</div>
+        <button class="count-btn" onclick="changeCount(1)">+</button>
+      </div>
     </div>
-    <button id="btnNightNext" onclick="nightNext()">Continuer ▶</button>
+
+    <div class="player-grid" id="playerGrid"></div>
+
+    <button class="btn-primary" id="btnStart" onclick="startGame()" disabled>LANCER LA PARTIE</button>
+    <button class="btn-secondary" onclick="showScreen('screen-launch')" style="margin-top:8px">← RETOUR</button>
   </div>
 </div>
 
-<!-- SCREEN DAY -->
-<div id="screen-day" class="screen">
-  <h2>☀️ Jour <span id="dayNumber">1</span></h2>
-  <div class="day-subtitle">Débattez et votez pour éliminer un suspect</div>
-  <div class="timer-text" id="timerText">5:00</div>
-  <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
-  <div class="players-grid" id="playersGrid"></div>
-  <div class="vote-section">
-    <h3 id="voteLabel">Sélectionnez un joueur à éliminer</h3>
-    <button class="btn-vote" id="btnVote" onclick="confirmVote()" disabled>Éliminer</button>
-    <button class="btn-skip" onclick="skipVote()">Passer le vote</button>
+<!-- ÉCRAN 3 : ATTRIBUTION DES RÔLES -->
+<div class="screen" id="screen-roles">
+  <div class="roles-box">
+    <div class="roles-title">🎭 ATTRIBUTION DES RÔLES</div>
+    <div class="roles-subtitle">CHAQUE JOUEUR RÉVÈLE SON RÔLE EN PRIVÉ</div>
+    <div id="roleCards"></div>
+    <button class="btn-primary" id="btnGoGame" onclick="showScreen('screen-game')" style="display:none">COMMENCER LA PARTIE ►</button>
   </div>
 </div>
 
-<!-- SCREEN ELIM -->
-<div id="screen-elim" class="screen">
-  <div class="elim-box">
-    <img id="elimImg" src="" alt=""/>
-    <h2 id="elimName"></h2>
-    <div class="elim-was">était…</div>
-    <div class="elim-role" id="elimRole"></div>
-    <button id="btnAfterElim" onclick="afterElim()">Continuer</button>
+<!-- ÉCRAN 4 : JEU -->
+<div class="screen" id="screen-game">
+  <div class="game-box">
+    <div class="round-badge" id="roundBadge">MANCHE 1</div>
+
+    <div class="phase-banner night" id="phaseBanner">🌙 NUIT</div>
+
+    <div class="timer-box" id="timerBox">5:00</div>
+
+    <div class="players-list" id="playersList"></div>
+
+    <div class="log-box" id="logBox">Le jeu commence...</div>
+
+    <div class="action-row">
+      <button class="btn-primary" id="btnPhase" onclick="nextPhase()" style="flex:1">☀️ PASSER AU JOUR</button>
+      <button class="btn-secondary" onclick="confirmQuit()" style="width:auto;padding:0 20px">✕</button>
+    </div>
   </div>
 </div>
 
-<!-- SCREEN END -->
-<div id="screen-end" class="screen">
+<!-- ÉCRAN 5 : FIN -->
+<div class="screen" id="screen-end">
   <div class="end-box">
-    <h1 id="endTitle"></h1>
-    <p id="endSubtitle"></p>
-    <div class="final-list" id="finalList"></div>
-    <button class="btn-restart" onclick="restartGame()">REJOUER</button>
+    <div class="end-trophy" id="endTrophy">🏆</div>
+    <div class="end-title" id="endTitle">VICTOIRE !</div>
+    <div class="end-winner" id="endWinner"></div>
+    <div class="end-stats" id="endStats"></div>
+    <button class="btn-primary" onclick="showScreen('screen-launch')">NOUVELLE PARTIE</button>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMATION -->
+<div class="modal-overlay" id="modalQuit">
+  <div class="modal-box">
+    <div class="modal-emoji">⚠️</div>
+    <div class="modal-title">QUITTER ?</div>
+    <div class="modal-text">La partie en cours sera sauvegardée. Vous pourrez la reprendre plus tard.</div>
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="closeModal('modalQuit')" style="flex:1">ANNULER</button>
+      <button class="btn-primary" onclick="quitGame()" style="flex:1;margin:0">QUITTER</button>
+    </div>
   </div>
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════
-   ÉTAT GLOBAL
-═══════════════════════════════════════════════ */
-const G = {
-  players:[],
-  roles:{},
-  order:[],
-  revealIndex:0,
-  dayCount:1,
-  nightStep:0,
-  selectedPlayer:null,
-  timerInterval:null,
-  timerSec:300,
-  sounds:{},
-  ambianceCurrent:null, // 'day' | 'night'
-  voixBusy:false,
+// ═══════════════════════════════════════
+// ÉTAT DU JEU
+// ═══════════════════════════════════════
+let G = {
+  players: [],      // [{name, role, alive}]
+  phase: 'night',   // 'night' | 'day'
+  round: 1,
+  logs: [],
+  timerInterval: null,
+  timerSeconds: 300,
+  revealedCount: 0
 };
 
-/* ═══════════════════════════════════════════════
-   IMAGES (base64 inline SVG fallbacks)
-═══════════════════════════════════════════════ */
-const ROLE_IMAGES = {
-  mafia:   makeColorSVG('#c0392b','🔫'),
-  police:  makeColorSVG('#2980b9','🚔'),
-  citoyen: makeColorSVG('#27ae60','👤'),
-  under:   makeColorSVG('#8e44ad','🕵'),
-};
-const AVATAR_COLORS = ['#c0392b','#2980b9','#27ae60','#8e44ad','#e67e22','#1abc9c','#e91e63','#ff5722'];
+const ROLES_CONFIG = [
+  { key: 'mafia',    name: 'MAFIA',      emoji: '🔫', color: '#cc3333', desc: 'Eliminez les innocents chaque nuit.' },
+  { key: 'police',   name: 'COMMISSAIRE',emoji: '🔍', color: '#3399ff', desc: 'Identifiez un joueur chaque nuit.' },
+  { key: 'medecin',  name: 'MÉDECIN',    emoji: '💊', color: '#33cc66', desc: 'Sauvez un joueur chaque nuit.' },
+  { key: 'civil',    name: 'CIVIL',      emoji: '👤', color: '#888888', desc: 'Déduisez et votez pendant le jour.' }
+];
 
-function makeColorSVG(color, emoji) {
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='200' height='200' rx='20' fill='${color}22'/><rect width='200' height='200' rx='20' fill='none' stroke='${color}' stroke-width='4'/><text x='100' y='120' text-anchor='middle' font-size='80'>${emoji}</text></svg>`;
-  return 'data:image/svg+xml;base64,' + btoa(svg);
-}
-function makeAvatarSVG(name, idx) {
-  const color = AVATAR_COLORS[idx % AVATAR_COLORS.length];
-  const letter = name ? name[0].toUpperCase() : '?';
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><circle cx='50' cy='50' r='50' fill='${color}33'/><circle cx='50' cy='50' r='50' fill='none' stroke='${color}' stroke-width='3'/><text x='50' y='64' text-anchor='middle' font-size='42' fill='${color}' font-family='Georgia'>${letter}</text></svg>`;
-  return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
-}
+const ROLE_COLORS = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#e91e63'];
 
-/* ═══════════════════════════════════════════════
-   AUDIO — INIT EN SERIE
-═══════════════════════════════════════════════ */
-const SOUND_FILES = {
-  day:           'ambiance.mp3',
-  night:         'ambiance-nuit.mp3',
-  debut:         'debut.mp3',
-  'mafia-reveil':'mafia-reveil.mp3',
-  'mafia-dodo':  'mafia-dodo.mp3',
-  'under-reveil':'under-reveil.mp3',
-  'under-dodo':  'under-dodo.mp3',
-  jour:          'jour.mp3',
-  '60s':         '60s.mp3',
-  'chrono-fin':  'chrono-fin.mp3',
-};
-
-function initAudio(callback) {
-  const keys = Object.entries(SOUND_FILES);
-  let i = 0;
-  const fill = document.getElementById('loadingFill');
-
-  function next() {
-    if (i >= keys.length) { callback(); return; }
-    const [key, src] = keys[i++];
-    if (fill) fill.style.width = Math.round((i/keys.length)*100)+'%';
-
-    const a = new Audio();
-    a.preload = 'auto';
-    G.sounds[key] = a;
-
-    const proceed = () => { a.pause(); a.currentTime = 0; next(); };
-    a.addEventListener('canplaythrough', proceed, { once:true });
-    a.addEventListener('error', () => { next(); }); // fichier absent → on continue
-    a.src = src;
-    a.load();
-
-    // Sécurité : si canplaythrough ne se déclenche pas en 3s
-    setTimeout(() => { if(i > 0) {} }, 3000);
-  }
-
-  // Timeout global de sécurité
-  const globalTimeout = setTimeout(() => { callback(); }, 8000);
-  const origNext = next;
-  let called = false;
-  function safeCallback() { if(!called){ called=true; clearTimeout(globalTimeout); callback(); } }
-
-  // Re-wrap callback
-  function next2() {
-    if (i >= keys.length) { safeCallback(); return; }
-    const [key, src] = keys[i++];
-    if (fill) fill.style.width = Math.round((i/keys.length)*100)+'%';
-    const a = new Audio();
-    a.preload = 'auto';
-    G.sounds[key] = a;
-    const proceed = () => { a.pause(); a.currentTime = 0; next2(); };
-    a.addEventListener('canplaythrough', proceed, { once:true });
-    a.addEventListener('error', () => next2());
-    a.src = src;
-    a.load();
-  }
-  next2();
-}
-
-/* ─── AMBIANCE ─────────────────────────────── */
-function playAmbiance(type) {
-  // Couper l'ancienne
-  if (G.ambianceCurrent && G.ambianceCurrent !== type) {
-    const old = G.sounds[G.ambianceCurrent];
-    if (old) { old.pause(); old.currentTime = 0; }
-  }
-  G.ambianceCurrent = type;
-  const snd = G.sounds[type];
-  if (!snd) return;
-  if (!snd.paused) return; // déjà en cours
-  snd.loop = true;
-  snd.volume = 0.45;
-  snd.play().catch(()=>{});
-}
-
-function pauseAmbiance() {
-  if (!G.ambianceCurrent) return;
-  const snd = G.sounds[G.ambianceCurrent];
-  if (snd && !snd.paused) snd.pause(); // NE PAS reset currentTime
-}
-
-function resumeAmbiance() {
-  if (!G.ambianceCurrent) return;
-  const snd = G.sounds[G.ambianceCurrent];
-  if (snd && snd.paused) snd.play().catch(()=>{});
-}
-
-function stopAmbiance() {
-  ['day','night'].forEach(k => {
-    const s = G.sounds[k];
-    if (s) { s.pause(); s.currentTime = 0; }
-  });
-  G.ambianceCurrent = null;
-}
-
-/* ─── VOIX OFF ─────────────────────────────── */
-function playVoix(key, fallbackMs = 4000) {
-  return new Promise(resolve => {
-    const snd = G.sounds[key];
-    if (!snd) { setTimeout(resolve, 600); return; }
-
-    pauseAmbiance();
-    snd.currentTime = 0;
-    snd.volume = 1;
-
-    let done = false;
-    const finish = () => {
-      if (done) return;
-      done = true;
-      clearTimeout(fallback);
-      snd.pause();
-      setTimeout(() => { resumeAmbiance(); resolve(); }, 350);
-    };
-
-    snd.addEventListener('ended', finish, { once:true });
-    const fallback = setTimeout(finish, fallbackMs);
-    snd.play().catch(() => finish());
-  });
-}
-
-/* ═══════════════════════════════════════════════
-   ÉCRANS
-═══════════════════════════════════════════════ */
+// ═══════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+
+  if (id === 'screen-config') initConfig();
+  if (id === 'screen-game') initGame();
 }
 
-/* ═══════════════════════════════════════════════
-   LAUNCH
-═══════════════════════════════════════════════ */
-function onLaunch() {
-  showScreen('screen-loading');
-  initAudio(() => {
-    showScreen('screen-config');
-    initConfigScreen();
-    // Lancer la musique de jour dès la config
-    playAmbiance('day');
-  });
-}
-
-/* ═══════════════════════════════════════════════
-   CONFIG
-═══════════════════════════════════════════════ */
-function initConfigScreen() {
-  const list = document.getElementById('playersList');
-  list.innerHTML = '';
-  G.players = [];
-  // 4 joueurs vides par défaut
-  for (let i = 0; i < 4; i++) addPlayer('');
-}
-
-function addPlayer(name='') {
-  const idx = G.players.length;
-  G.players.push({ name, id: Date.now()+Math.random() });
-  renderPlayersList();
-}
-
-function removePlayer(idx) {
-  G.players.splice(idx,1);
-  renderPlayersList();
-}
-
-function renderPlayersList() {
-  const list = document.getElementById('playersList');
-  list.innerHTML = '';
-  G.players.forEach((p,i) => {
-    const row = document.createElement('div');
-    row.className = 'player-row';
-    row.innerHTML = `
-      <input type="text" placeholder="Joueur ${i+1}" value="${escHtml(p.name)}"
-        onfocus="if(this.value===this.placeholder||this.dataset.default)this.value=''"
-        onblur="updatePlayerName(${i}, this.value)"
-        oninput="updatePlayerName(${i}, this.value)"/>
-      <button class="btn-remove" onclick="removePlayer(${i})">✕</button>`;
-    list.appendChild(row);
-  });
-  updateRolesSummary();
-  updateStartBtn();
-}
-
-function updatePlayerName(idx, val) {
-  if (G.players[idx]) G.players[idx].name = val.trim();
-  updateRolesSummary();
-  updateStartBtn();
-}
-
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function computeRoles(n) {
-  const mafia  = Math.max(1, Math.floor(n/4));
-  const police = Math.max(1, Math.floor(n/5));
-  const under  = n >= 7 ? 1 : 0;
-  const citoyen = n - mafia - police - under;
-  return { mafia, police, under, citoyen };
-}
-
-function updateRolesSummary() {
-  const n = G.players.length;
-  const r = computeRoles(n);
-  const el = document.getElementById('rolesSummary');
-  el.innerHTML = `<h3>Composition pour ${n} joueurs</h3>
-    <span class="role-tag mafia">🔫 Mafia ×${r.mafia}</span>
-    <span class="role-tag police">🚔 Police ×${r.police}</span>
-    ${r.under?'<span class="role-tag under">🕵 Undercover ×1</span>':''}
-    <span class="role-tag citoyen">👤 Citoyen ×${r.citoyen}</span>`;
-}
-
-function updateStartBtn() {
-  const valid = G.players.length >= 4 && G.players.every(p => p.name.length > 0);
-  document.getElementById('btnStart').disabled = !valid;
-}
-
-/* ═══════════════════════════════════════════════
-   START GAME
-═══════════════════════════════════════════════ */
-function startGame() {
-  const n = G.players.length;
-  const r = computeRoles(n);
-  // Construire la liste des rôles
-  let rolePool = [];
-  for(let i=0;i<r.mafia;i++) rolePool.push('mafia');
-  for(let i=0;i<r.police;i++) rolePool.push('police');
-  if(r.under) rolePool.push('under');
-  for(let i=0;i<r.citoyen;i++) rolePool.push('citoyen');
-  // Mélanger
-  rolePool = rolePool.sort(()=>Math.random()-.5);
-  G.roles = {};
-  G.players.forEach((p,i) => { G.roles[p.name] = rolePool[i]; });
-  G.order = [...G.players];
-  G.revealIndex = 0;
-  G.dayCount = 1;
-  showReveal();
-}
-
-/* ═══════════════════════════════════════════════
-   REVEAL
-═══════════════════════════════════════════════ */
-const ROLE_INFO = {
-  mafia:   { label:'🔫 Mafieux',    color:'#e74c3c', desc:'Élimine les citoyens chaque nuit. Reste discret le jour.' },
-  police:  { label:'🚔 Policier',   color:'#3498db', desc:'Identifie les mafieux et protège la ville.' },
-  citoyen: { label:'👤 Citoyen',    color:'#2ecc71', desc:'Trouve et élimine les mafieux par le vote.' },
-  under:   { label:'🕵 Undercover', color:'#9b59b6', desc:'Agent infiltré. Infiltre la Mafia pour la démasquer.' },
+// ═══════════════════════════════════════
+// LAUNCH
+// ═══════════════════════════════════════
+window.onload = function() {
+  const saved = localStorage.getItem('mafianoir_save');
+  if (saved) {
+    document.getElementById('btnResume').style.display = 'block';
+  }
 };
 
-function showReveal() {
-  stopAmbiance();
-  const player = G.order[G.revealIndex];
-  const role = G.roles[player.name];
-  const info = ROLE_INFO[role];
-  document.getElementById('revealName').textContent = player.name;
-  document.getElementById('revealImg').src = ROLE_IMAGES[role];
-  document.getElementById('revealRole').textContent = info.label;
-  document.getElementById('revealRole').style.color = info.color;
-  document.getElementById('revealDesc').textContent = info.desc;
-  showScreen('screen-reveal');
-}
-
-function nextReveal() {
-  G.revealIndex++;
-  if (G.revealIndex >= G.order.length) {
-    startNight();
-  } else {
-    showReveal();
+function onResume() {
+  try {
+    G = JSON.parse(localStorage.getItem('mafianoir_save'));
+    showScreen('screen-game');
+    renderGame();
+  } catch(e) {
+    alert('Impossible de reprendre la partie.');
   }
 }
 
-/* ═══════════════════════════════════════════════
-   NIGHT
-═══════════════════════════════════════════════ */
-const NIGHT_STEPS = [
-  { key:'debut',         img:'citoyen', text:'Tout le monde ferme les yeux. La nuit tombe sur le village…' },
-  { key:'mafia-reveil',  img:'mafia',   text:'La Mafia se réveille. Mafieux, ouvrez les yeux et désignez silencieusement une victime.' },
-  { key:'mafia-dodo',    img:'mafia',   text:'La Mafia se rendort.' },
-  { key:'under-reveil',  img:'under',   text:'L'agent Undercover se réveille. Undercover, ouvrez les yeux.' },
-  { key:'under-dodo',    img:'under',   text:'L'agent Undercover se rendort.' },
-  { key:'jour',          img:'citoyen', text:'Le jour se lève. Tout le monde ouvre les yeux.' },
-];
+// ═══════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════
+let playerCount = 4;
 
-let nightSteps = [];
-
-function buildNightSteps() {
-  const hasUnder = G.players.some(p => !p.dead && G.roles[p.name] === 'under');
-  nightSteps = NIGHT_STEPS.filter(s => {
-    if ((s.key==='under-reveil'||s.key==='under-dodo') && !hasUnder) return false;
-    return true;
-  });
+function initConfig() {
+  renderPlayerInputs();
 }
 
-function startNight() {
-  buildNightSteps();
-  G.nightStep = 0;
-  playAmbiance('night');
-  showScreen('screen-night');
-  runNightStep();
+function changeCount(delta) {
+  playerCount = Math.max(4, Math.min(12, playerCount + delta));
+  document.getElementById('countVal').textContent = playerCount;
+  renderPlayerInputs();
 }
 
-async function runNightStep() {
-  if (G.nightStep >= nightSteps.length) {
-    startDay();
-    return;
-  }
-  const step = nightSteps[G.nightStep];
-  document.getElementById('nightImg').src = ROLE_IMAGES[step.img] || ROLE_IMAGES.citoyen;
-  document.getElementById('nightText').textContent = step.text;
-  document.getElementById('btnNightNext').style.display = 'none';
-
-  await playVoix(step.key, 5000);
-
-  document.getElementById('btnNightNext').style.display = 'inline-block';
-}
-
-function nightNext() {
-  G.nightStep++;
-  runNightStep();
-}
-
-/* ═══════════════════════════════════════════════
-   DAY
-═══════════════════════════════════════════════ */
-function startDay() {
-  stopAmbiance();
-  playAmbiance('day');
-  G.selectedPlayer = null;
-  document.getElementById('dayNumber').textContent = G.dayCount;
-  renderPlayersGrid();
-  startTimer();
-  showScreen('screen-day');
-  playVoix('jour', 4000);
-}
-
-function renderPlayersGrid() {
-  const grid = document.getElementById('playersGrid');
+function renderPlayerInputs() {
+  const grid = document.getElementById('playerGrid');
   grid.innerHTML = '';
-  G.players.forEach((p,i) => {
-    const role = G.roles[p.name];
-    const div = document.createElement('div');
-    div.className = 'player-card' + (p.dead?' dead':'');
-    div.onclick = () => { if(!p.dead) selectPlayer(p.name); };
-    div.id = 'pcard-'+p.name;
-    div.innerHTML = `
-      <img src="${makeAvatarSVG(p.name,i)}" alt="${escHtml(p.name)}"/>
-      <div class="p-name">${escHtml(p.name)}</div>`;
-    grid.appendChild(div);
-  });
+  for (let i = 0; i < playerCount; i++) {
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'player-input';
+    inp.placeholder = 'Joueur ' + (i + 1);
+    inp.maxLength = 16;
+    inp.addEventListener('input', checkCanStart);
+    grid.appendChild(inp);
+  }
+  checkCanStart();
 }
 
-function selectPlayer(name) {
-  G.selectedPlayer = name;
-  document.querySelectorAll('.player-card').forEach(c => c.classList.remove('selected'));
-  const card = document.getElementById('pcard-'+name);
-  if (card) card.classList.add('selected');
-  document.getElementById('btnVote').disabled = false;
-  document.getElementById('voteLabel').textContent = `Éliminer ${name} ?`;
+function checkCanStart() {
+  const inputs = document.querySelectorAll('.player-input');
+  const allFilled = [...inputs].every(i => i.value.trim().length > 0);
+  document.getElementById('btnStart').disabled = !allFilled;
+}
+
+// ═══════════════════════════════════════
+// ATTRIBUTION DES RÔLES
+// ═══════════════════════════════════════
+function startGame() {
+  const inputs = document.querySelectorAll('.player-input');
+  const names = [...inputs].map(i => i.value.trim());
+
+  // Calculer les rôles
+  const n = names.length;
+  const mafiaCount = Math.max(1, Math.floor(n / 4));
+  const roles = [];
+  
+  for (let i = 0; i < mafiaCount; i++) roles.push('mafia');
+  if (n >= 5) roles.push('police');
+  if (n >= 6) roles.push('medecin');
+  while (roles.length < n) roles.push('civil');
+
+  // Mélanger
+  roles.sort(() => Math.random() - 0.5);
+
+  G = {
+    players: names.map((name, i) => ({ name, role: roles[i], alive: true })),
+    phase: 'night',
+    round: 1,
+    logs: ['La partie commence. Bonne chance !'],
+    timerInterval: null,
+    timerSeconds: 300,
+    revealedCount: 0
+  };
+
+  showScreen('screen-roles');
+  renderRoleCards();
+}
+
+function getRoleConfig(key) {
+  return ROLES_CONFIG.find(r => r.key === key) || ROLES_CONFIG[3];
+}
+
+function renderRoleCards() {
+  const container = document.getElementById('roleCards');
+  container.innerHTML = '';
+  G.revealedCount = 0;
+
+  G.players.forEach((p, i) => {
+    const rc = getRoleConfig(p.role);
+    const card = document.createElement('div');
+    card.className = 'role-card';
+    card.id = 'roleCard' + i;
+    card.style.marginBottom = '12px';
+    card.innerHTML = `
+      <div class="player-name">👤 ${p.name}</div>
+      <div class="role-emoji" id="rEmoji${i}">${rc.emoji}</div>
+      <div class="role-name" id="rName${i}" style="color:${rc.color}">${rc.name}</div>
+      <div class="role-desc" id="rDesc${i}">${rc.desc}</div>
+      <button class="reveal-btn" id="rBtn${i}" onclick="revealRole(${i})">👁 VOIR MON RÔLE</button>
+    `;
+    container.appendChild(card);
+  });
+
+  document.getElementById('btnGoGame').style.display = 'none';
+}
+
+function revealRole(i) {
+  const card = document.getElementById('roleCard' + i);
+  card.classList.add('revealed');
+  document.getElementById('rBtn' + i).style.display = 'none';
+  G.revealedCount++;
+  if (G.revealedCount === G.players.length) {
+    document.getElementById('btnGoGame').style.display = 'block';
+  }
+}
+
+// ═══════════════════════════════════════
+// JEU
+// ═══════════════════════════════════════
+function initGame() {
+  G.phase = 'night';
+  G.timerSeconds = 300;
+  renderGame();
+  startTimer();
+  saveGame();
+}
+
+function renderGame() {
+  // Phase banner
+  const banner = document.getElementById('phaseBanner');
+  const btn = document.getElementById('btnPhase');
+  const round = document.getElementById('roundBadge');
+
+  round.textContent = 'MANCHE ' + G.round;
+
+  if (G.phase === 'night') {
+    banner.className = 'phase-banner night';
+    banner.textContent = '🌙 NUIT';
+    btn.textContent = '☀️ PASSER AU JOUR';
+  } else {
+    banner.className = 'phase-banner day';
+    banner.textContent = '☀️ JOUR';
+    btn.textContent = '🌙 PASSER À LA NUIT';
+  }
+
+  // Liste joueurs
+  const list = document.getElementById('playersList');
+  list.innerHTML = '';
+  G.players.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'player-row' + (p.alive ? '' : ' eliminated');
+
+    const color = ROLE_COLORS[i % ROLE_COLORS.length];
+    const initial = p.name.charAt(0).toUpperCase();
+
+    row.innerHTML = `
+      <div class="player-info">
+        <div class="player-avatar" style="background:${color}">${initial}</div>
+        <div>
+          <div class="player-row-name">${p.name}</div>
+          <div class="player-status">${p.alive ? 'En vie' : 'Éliminé'}</div>
+        </div>
+      </div>
+      ${p.alive ? `<button class="btn-eliminate" onclick="eliminatePlayer(${i})">ÉLIMINER</button>` : '<span style="color:#ff4444;font-size:12px">☠️</span>'}
+    `;
+    list.appendChild(row);
+  });
+
+  // Log
+  const log = document.getElementById('logBox');
+  log.innerHTML = G.logs.slice(-10).map(l => `<div>• ${l}</div>`).join('');
+  log.scrollTop = log.scrollHeight;
 }
 
 function startTimer() {
-  clearInterval(G.timerInterval);
-  G.timerSec = 300;
+  if (G.timerInterval) clearInterval(G.timerInterval);
   updateTimerDisplay();
   G.timerInterval = setInterval(() => {
-    G.timerSec--;
+    G.timerSeconds--;
     updateTimerDisplay();
-    if (G.timerSec === 60) playVoix('60s', 5000);
-    if (G.timerSec <= 0) {
+    if (G.timerSeconds <= 0) {
       clearInterval(G.timerInterval);
-      playVoix('chrono-fin', 4000);
+      addLog('⏰ Temps écoulé !');
     }
+    saveGame();
   }, 1000);
 }
 
 function updateTimerDisplay() {
-  const m = Math.floor(G.timerSec/60);
-  const s = G.timerSec%60;
-  document.getElementById('timerText').textContent = m+':'+(s<10?'0':'')+s;
-  const pct = (G.timerSec/300)*100;
-  document.getElementById('timerFill').style.width = pct+'%';
+  const m = Math.floor(G.timerSeconds / 60);
+  const s = G.timerSeconds % 60;
+  const box = document.getElementById('timerBox');
+  box.textContent = m + ':' + String(s).padStart(2, '0');
+  box.className = 'timer-box' + (G.timerSeconds <= 30 ? ' urgent' : '');
 }
 
-function confirmVote() {
-  if (!G.selectedPlayer) return;
-  clearInterval(G.timerInterval);
-  eliminatePlayer(G.selectedPlayer);
+function nextPhase() {
+  if (G.phase === 'night') {
+    G.phase = 'day';
+    addLog('☀️ Le jour se lève — débattez et votez !');
+  } else {
+    G.phase = 'night';
+    G.round++;
+    addLog('🌙 La nuit tombe — la Mafia agit...');
+  }
+  G.timerSeconds = 300;
+  renderGame();
+  startTimer();
+  checkWin();
+  saveGame();
 }
 
-function skipVote() {
-  clearInterval(G.timerInterval);
-  G.dayCount++;
-  startNight();
+function eliminatePlayer(i) {
+  const p = G.players[i];
+  if (!p.alive) return;
+  p.alive = false;
+  const rc = getRoleConfig(p.role);
+  addLog(`☠️ ${p.name} est éliminé — c'était un ${rc.name}`);
+  renderGame();
+  if (!checkWin()) saveGame();
 }
 
-/* ═══════════════════════════════════════════════
-   ÉLIMINATION
-═══════════════════════════════════════════════ */
-function eliminatePlayer(name) {
-  const player = G.players.find(p => p.name === name);
-  if (!player) return;
-  player.dead = true;
-  const role = G.roles[name];
-  const info = ROLE_INFO[role];
-
-  // Flash
-  const fl = document.getElementById('flash');
-  fl.style.opacity = '1';
-  setTimeout(() => fl.style.opacity = '0', 300);
-
-  // TTS
-  const msg = new SpeechSynthesisUtterance(`${name} était ${info.label.replace(/[🔫🚔👤🕵]/g,'')}`);
-  msg.lang = 'fr-FR';
-  window.speechSynthesis.speak(msg);
-
-  // Écran élim
-  const idx = G.players.findIndex(p => p.name === name);
-  document.getElementById('elimImg').src = makeAvatarSVG(name, idx);
-  document.getElementById('elimName').textContent = name;
-  document.getElementById('elimRole').textContent = info.label;
-  document.getElementById('elimRole').style.color = info.color;
-  showScreen('screen-elim');
-  stopAmbiance();
+function addLog(msg) {
+  G.logs.push(msg);
+  const log = document.getElementById('logBox');
+  if (log) {
+    log.innerHTML = G.logs.slice(-10).map(l => `<div>• ${l}</div>`).join('');
+    log.scrollTop = log.scrollHeight;
+  }
 }
 
-function afterElim() {
-  if (checkVictory()) return;
-  G.dayCount++;
-  startNight();
-}
+function checkWin() {
+  const alive = G.players.filter(p => p.alive);
+  const aliveMafia = alive.filter(p => p.role === 'mafia').length;
+  const aliveOthers = alive.filter(p => p.role !== 'mafia').length;
 
-/* ═══════════════════════════════════════════════
-   VICTOIRE
-═══════════════════════════════════════════════ */
-function checkVictory() {
-  const alive = G.players.filter(p => !p.dead);
-  const aliveMafia = alive.filter(p => G.roles[p.name]==='mafia').length;
-  const alivePolice = alive.filter(p => G.roles[p.name]==='police'||G.roles[p.name]==='under').length;
-  const aliveOther = alive.length;
-
-  if (aliveMafia === 0) { showEnd('police'); return true; }
-  if (aliveMafia >= aliveOther - aliveMafia) { showEnd('mafia'); return true; }
+  if (aliveMafia === 0) {
+    endGame('police');
+    return true;
+  }
+  if (aliveMafia >= aliveOthers) {
+    endGame('mafia');
+    return true;
+  }
   return false;
 }
 
-function showEnd(winner) {
-  stopAmbiance();
+function endGame(winner) {
+  if (G.timerInterval) clearInterval(G.timerInterval);
+  localStorage.removeItem('mafianoir_save');
+
+  const trophy = document.getElementById('endTrophy');
   const title = document.getElementById('endTitle');
-  const sub = document.getElementById('endSubtitle');
-  if (winner === 'police') {
-    title.textContent = '🚔 La Police a gagné !';
-    title.className = 'win-police';
-    sub.textContent = 'Les mafieux ont été neutralisés. La ville est sauvée.';
+  const winnerEl = document.getElementById('endWinner');
+  const stats = document.getElementById('endStats');
+
+  if (winner === 'mafia') {
+    trophy.textContent = '🔫';
+    title.textContent = 'LA MAFIA GAGNE !';
+    title.style.color = '#cc3333';
+    winnerEl.textContent = 'La Mafia a pris le contrôle de la ville.';
   } else {
-    title.textContent = '🔫 La Mafia a gagné !';
-    title.className = 'win-mafia';
-    sub.textContent = 'La Mafia contrôle désormais la ville.';
+    trophy.textContent = '🔍';
+    title.textContent = 'LA POLICE GAGNE !';
+    title.style.color = '#3399ff';
+    winnerEl.textContent = 'La Mafia a été démasquée et éliminée !';
   }
-  const list = document.getElementById('finalList');
-  list.innerHTML = '';
-  G.players.forEach((p,i) => {
-    const role = G.roles[p.name];
-    const info = ROLE_INFO[role];
-    const div = document.createElement('div');
-    div.className = 'final-player';
-    div.innerHTML = `
-      <img src="${makeAvatarSVG(p.name,i)}" alt=""/>
-      <div class="fp-name">${escHtml(p.name)}${p.dead?' ☠':''}</div>
-      <div class="fp-role ${role}">${info.label}</div>`;
-    list.appendChild(div);
-  });
+
+  const eliminated = G.players.filter(p => !p.alive);
+  stats.innerHTML = `
+    <div class="end-stat-row"><span>Manches jouées</span><span>${G.round}</span></div>
+    <div class="end-stat-row"><span>Joueurs éliminés</span><span>${eliminated.length} / ${G.players.length}</span></div>
+    <div class="end-stat-row"><span>Survivants</span><span>${G.players.filter(p => p.alive).map(p => p.name).join(', ') || 'Aucun'}</span></div>
+    <hr style="border-color:#333;margin:12px 0">
+    ${G.players.map(p => {
+      const rc = getRoleConfig(p.role);
+      return `<div class="end-stat-row"><span>${p.name}</span><span style="color:${rc.color}">${rc.emoji} ${rc.name}</span></div>`;
+    }).join('')}
+  `;
+
   showScreen('screen-end');
 }
 
-function restartGame() {
-  stopAmbiance();
-  showScreen('screen-config');
-  initConfigScreen();
-  playAmbiance('day');
+// ═══════════════════════════════════════
+// SAVE / QUIT
+// ═══════════════════════════════════════
+function saveGame() {
+  try {
+    localStorage.setItem('mafianoir_save', JSON.stringify(G));
+  } catch(e) {}
+}
+
+function confirmQuit() {
+  document.getElementById('modalQuit').classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function quitGame() {
+  if (G.timerInterval) clearInterval(G.timerInterval);
+  saveGame();
+  closeModal('modalQuit');
+  showScreen('screen-launch');
+  document.getElementById('btnResume').style.display = 'block';
 }
 </script>
 </body>
