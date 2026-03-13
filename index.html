@@ -7,950 +7,1192 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>MAFIA NOIR</title>
 <style>
+
 /* ============================================
    RESET & VARIABLES
 ============================================ */
 *, *::before, *::after {
   box-sizing: border-box;
-  margin: 0; padding: 0;
+  margin: 0;
+  padding: 0;
   -webkit-tap-highlight-color: transparent;
 }
+
 :root {
-  --noir: #0a0a0a;
-  --rouge: #8b0000;
-  --rouge-vif: #c0392b;
-  --or: #c9a84c;
-  --or-clair: #f0d080;
-  --papier: #d4c5a9;
-  --papier-dark: #b8a88a;
-  --texte: #e8dcc8;
-  --gris: #555;
-  --vert: #1a4a1a;
-  --vert-vif: #27ae60;
-  --font-titre: 'Georgia','Times New Roman',serif;
-  --font-mono: 'Courier New','Courier',monospace;
+  --noir:       #0a0a0a;
+  --rouge:      #8b0000;
+  --rouge-vif:  #c0392b;
+  --or:         #c9a84c;
+  --or-clair:   #f0d080;
+  --papier:     #d4c5a9;
+  --papier-dark:#b8a88a;
+  --texte:      #e8dcc8;
+  --gris:       #555;
+  --vert:       #1a4a1a;
+  --vert-vif:   #27ae60;
+  --font-titre: 'Georgia', 'Times New Roman', serif;
+  --font-mono:  'Courier New', 'Courier', monospace;
 }
+
 html, body {
-  width: 100%; height: 100%;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   background: var(--noir);
   color: var(--texte);
   font-family: var(--font-mono);
 }
+
+/* ============================================
+   SCREENS
+============================================ */
 .screen {
-  position: fixed; inset: 0;
-  display: none; flex-direction: column;
+  position: fixed;
+  inset: 0;
+  display: none;
+  flex-direction: column;
   align-items: center;
-  overflow-y: auto; overflow-x: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
 }
 .screen.active { display: flex; }
 
 /* ============================================
-   ANIMATIONS GLOBALES
+   ÉTOILES
+============================================ */
+#starsBg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.star {
+  position: absolute;
+  border-radius: 50%;
+  background: white;
+  animation: twinkle var(--dur, 3s) var(--delay, 0s) infinite ease-in-out;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: .15; transform: scale(1); }
+  50%       { opacity: .9;  transform: scale(1.3); }
+}
+
+/* ============================================
+   ANIMATIONS
 ============================================ */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%,60% { transform: translateX(-6px); }
+  40%,80% { transform: translateX(6px); }
 }
 @keyframes pulse {
   0%,100% { opacity: 1; }
-  50%      { opacity: .4; }
-}
-@keyframes twinkle {
-  0%,100% { opacity: .2; transform: scale(1); }
-  50%      { opacity: 1;  transform: scale(1.4); }
-}
-@keyframes sway {
-  0%,100% { transform: rotate(-8deg); }
-  50%      { transform: rotate(8deg); }
-}
-@keyframes stampReveal {
-  0%   { transform: scale(2.5) rotate(-15deg); opacity: 0; }
-  60%  { transform: scale(.9)  rotate(2deg);  opacity: 1; }
-  80%  { transform: scale(1.05) rotate(-1deg); }
-  100% { transform: scale(1)   rotate(0deg);  opacity: 1; }
-}
-@keyframes shake {
-  0%,100% { transform: translateX(0); }
-  20%      { transform: translateX(-8px); }
-  40%      { transform: translateX(8px); }
-  60%      { transform: translateX(-5px); }
-  80%      { transform: translateX(5px); }
-}
-@keyframes voteBar {
-  from { width: 0%; }
-  to   { width: var(--target-w); }
+  50%      { opacity: .5; }
 }
 @keyframes ripple {
-  from { transform: scale(0); opacity: 1; }
-  to   { transform: scale(6); opacity: 0; }
+  to { transform: scale(4); opacity: 0; }
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes popIn {
+  0%   { opacity: 0; transform: scale(.85); }
+  70%  { transform: scale(1.04); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes glow {
+  0%,100% { text-shadow: 0 0 8px var(--or); }
+  50%      { text-shadow: 0 0 24px var(--or), 0 0 40px var(--or); }
 }
 
 /* ============================================
-   ÉTOILES
+   LAYOUT COMMUN
 ============================================ */
-.stars-bg {
-  position: fixed; inset: 0;
-  pointer-events: none; z-index: 0;
-}
-.star {
-  position: absolute; border-radius: 50%;
-  background: #fff;
-  animation: twinkle var(--dur, 3s) var(--delay, 0s) infinite;
-}
-
-/* ============================================
-   ÉCRAN LAUNCH
-============================================ */
-#screen-launch {
-  background: radial-gradient(ellipse at 50% 30%, #1a0a0a 0%, var(--noir) 70%);
-  justify-content: center;
-  z-index: 1;
-}
-.launch-inner {
-  display: flex; flex-direction: column;
-  align-items: center; text-align: center;
-  padding: 40px 30px; z-index: 1;
-  animation: fadeUp .8s ease both;
-}
-.launch-hat {
-  font-size: 72px;
-  animation: sway 3s ease-in-out infinite;
-  margin-bottom: 20px;
-  filter: drop-shadow(0 0 20px rgba(201,168,76,.4));
-}
-.launch-title {
-  font-family: var(--font-titre);
-  font-size: 42px; letter-spacing: 12px;
-  color: var(--or-clair);
-  text-shadow: 0 0 30px rgba(201,168,76,.5);
-  margin-bottom: 8px;
-}
-.launch-sub {
-  font-size: 9px; letter-spacing: 4px;
-  color: var(--gris); margin-bottom: 40px;
-}
-.launch-divider {
-  width: 60px; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--or), transparent);
-  margin-bottom: 40px;
-}
-.btn-launch {
-  padding: 18px 50px;
-  background: linear-gradient(135deg, var(--rouge), #3d0000);
-  border: 2px solid var(--or); border-radius: 3px;
-  color: var(--or-clair); font-family: var(--font-titre);
-  font-size: 16px; letter-spacing: 5px; cursor: pointer;
-  transition: transform .15s, box-shadow .15s;
-  box-shadow: 0 0 20px rgba(139,0,0,.4);
-}
-.btn-launch:active { transform: scale(.97); }
-.launch-resume {
-  background: none; border: none;
-  color: var(--gris); font-family: var(--font-mono);
-  font-size: 11px; letter-spacing: 3px; cursor: pointer;
-  padding: 10px; display: none;
-  transition: color .2s;
-}
-.launch-resume.visible { display: block; color: var(--or); }
-.launch-resume:active { opacity: .7; }
-
-/* ============================================
-   ÉCRAN CONFIG
-============================================ */
-#screen-config {
-  background: var(--noir);
-  padding-bottom: 40px; z-index: 1;
-}
-.cfg-header {
-  width: 100%; text-align: center;
-  padding: 50px 20px 20px;
-  border-bottom: 1px solid rgba(201,168,76,.15);
-  margin-bottom: 20px;
-}
-.cfg-title {
-  font-family: var(--font-titre);
-  font-size: 28px; letter-spacing: 8px; color: var(--or-clair);
-}
-.cfg-sub {
-  font-size: 9px; letter-spacing: 4px; color: var(--gris); margin-top: 6px;
-}
-.cfg-body {
-  width: 100%; max-width: 420px; padding: 0 20px;
-}
-.player-row {
-  display: flex; align-items: center; gap: 10px;
-  margin-bottom: 10px; animation: fadeUp .3s both;
-}
-.player-num {
-  width: 24px; text-align: center;
-  font-size: 11px; color: var(--gris); flex-shrink: 0;
-}
-.player-input {
-  flex: 1; padding: 12px 14px;
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(201,168,76,.2); border-radius: 3px;
-  color: var(--texte); font-family: var(--font-mono); font-size: 13px;
-  outline: none; transition: border-color .2s;
-}
-.player-input:focus { border-color: var(--or); }
-.btn-del {
-  width: 34px; height: 34px; flex-shrink: 0;
-  background: rgba(139,0,0,.2); border: 1px solid rgba(139,0,0,.4);
-  border-radius: 3px; color: var(--rouge-vif);
-  font-size: 14px; cursor: pointer; transition: background .2s;
-}
-.btn-del:active { background: rgba(139,0,0,.5); }
-.btn-add {
-  width: 100%; padding: 12px;
-  background: rgba(201,168,76,.05);
-  border: 1px dashed rgba(201,168,76,.3); border-radius: 3px;
-  color: var(--or); font-family: var(--font-mono);
-  font-size: 11px; letter-spacing: 3px; cursor: pointer;
-  margin-bottom: 24px; transition: background .2s;
-}
-.btn-add:active { background: rgba(201,168,76,.1); }
-.cfg-section {
-  margin-bottom: 24px;
-  border: 1px solid rgba(255,255,255,.06);
-  border-radius: 4px; padding: 16px;
-}
-.cfg-section-title {
-  font-size: 9px; letter-spacing: 4px; color: var(--gris);
-  margin-bottom: 14px;
-}
-.toggle-row {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 12px;
-}
-.toggle-row:last-child { margin-bottom: 0; }
-.toggle-label { font-size: 13px; color: var(--texte); }
-.toggle-sub   { font-size: 10px; color: var(--gris); margin-top: 2px; }
-.toggle {
-  width: 44px; height: 24px; border-radius: 12px;
-  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
-  position: relative; cursor: pointer; transition: background .3s;
-  flex-shrink: 0;
-}
-.toggle::after {
-  content: ''; position: absolute;
-  width: 18px; height: 18px; border-radius: 50%;
-  background: var(--gris); top: 2px; left: 2px;
-  transition: left .3s, background .3s;
-}
-.toggle.on { background: rgba(201,168,76,.3); border-color: var(--or); }
-.toggle.on::after { left: 22px; background: var(--or); }
-
-.diff-row, .dur-row {
-  display: flex; gap: 8px;
-}
-.diff-btn, .dur-btn {
-  flex: 1; padding: 10px 4px;
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.1); border-radius: 3px;
-  color: var(--gris); font-family: var(--font-mono);
-  font-size: 10px; letter-spacing: 1px; cursor: pointer;
-  transition: all .2s;
-}
-.diff-btn.active, .dur-btn.active {
-  background: rgba(201,168,76,.15);
-  border-color: var(--or); color: var(--or-clair);
-}
-.cfg-err {
-  color: var(--rouge-vif); font-size: 11px; letter-spacing: 2px;
-  text-align: center; margin: 12px 0; min-height: 18px;
-}
-.cfg-err.shake { animation: shake .4s ease; }
-.btn-start {
-  width: 100%; padding: 17px;
-  background: linear-gradient(135deg, var(--rouge), #3d0000);
-  border: 2px solid var(--or); border-radius: 3px;
-  color: var(--or-clair); font-family: var(--font-titre);
-  font-size: 16px; letter-spacing: 5px; cursor: pointer;
-  transition: transform .15s; margin-top: 8px;
-}
-.btn-start:active { transform: scale(.98); }
-
-/* ============================================
-   ÉCRAN REVEAL
-============================================ */
-#screen-reveal {
-  background: radial-gradient(ellipse at 50% 20%, #0d0808 0%, var(--noir) 80%);
-  justify-content: center; z-index: 1;
-}
-.rv-wrap {
-  width: 100%; max-width: 380px;
-  padding: 40px 24px; text-align: center;
-}
-.rv-turn {
-  font-size: 9px; letter-spacing: 4px; color: var(--gris); margin-bottom: 10px;
-}
-.rv-name {
-  font-family: var(--font-titre);
-  font-size: 26px; letter-spacing: 6px; color: var(--or-clair);
-  margin-bottom: 24px;
-}
-.rv-dots {
-  display: flex; gap: 8px; justify-content: center; margin-bottom: 30px;
-}
-.rv-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: rgba(255,255,255,.15); transition: all .3s;
-}
-.rv-dot.done { background: var(--or); }
-.rv-dot.cur  { background: var(--rouge-vif); transform: scale(1.3); }
-
-.rv-cover {
-  background: rgba(201,168,76,.08);
-  border: 2px dashed rgba(201,168,76,.3); border-radius: 8px;
-  padding: 40px 20px; cursor: pointer;
-  margin-bottom: 20px; transition: background .2s;
-}
-.rv-cover:active { background: rgba(201,168,76,.15); }
-.rv-cover-icon { font-size: 48px; margin-bottom: 12px; }
-.rv-cover-text { font-size: 11px; letter-spacing: 3px; color: var(--or); }
-
-.role-card {
-  display: none; margin-bottom: 20px;
-  animation: stampReveal .6s ease both;
-}
-.role-card.show { display: block; }
-.rc-img-wrap {
-  width: 80px; height: 80px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 36px; margin: 0 auto 16px;
-  border: 3px solid;
-}
-.rc-img-wrap.mafia  { border-color: var(--rouge-vif); background: rgba(192,57,43,.15); }
-.rc-img-wrap.police { border-color: #3498db;          background: rgba(52,152,219,.15); }
-.rc-img-wrap.under  { border-color: var(--or);        background: rgba(201,168,76,.15); }
-.rc-title {
-  font-family: var(--font-titre);
-  font-size: 20px; letter-spacing: 5px; margin-bottom: 10px;
-}
-.rc-title.mafia  { color: var(--rouge-vif); }
-.rc-title.police { color: #3498db; }
-.rc-title.under  { color: var(--or); }
-.rc-desc { font-size: 12px; color: var(--texte); line-height: 1.6; padding: 0 10px; }
-
-.rv-hint {
-  font-size: 11px; color: var(--or); letter-spacing: 2px;
-  margin-bottom: 20px; min-height: 20px;
-}
-.btn-next-rv {
-  width: 100%; padding: 15px;
-  background: rgba(201,168,76,.1);
-  border: 1px solid rgba(201,168,76,.3); border-radius: 3px;
-  color: var(--or); font-family: var(--font-mono);
-  font-size: 11px; letter-spacing: 4px; cursor: pointer;
-  display: none; transition: background .2s;
-}
-.btn-next-rv.show { display: block; }
-.btn-next-rv:active { background: rgba(201,168,76,.2); }
-
-/* ============================================
-   ÉCRAN NUIT
-============================================ */
-#screen-night {
-  background: radial-gradient(ellipse at 50% 50%, #050510 0%, #000 100%);
-  justify-content: center; z-index: 1;
-}
-.night-wrap {
-  width: 100%; max-width: 380px;
-  padding: 40px 24px; text-align: center;
-}
-.night-round-badge {
-  font-size: 9px; letter-spacing: 4px; color: var(--gris); margin-bottom: 30px;
-}
-.night-icon { font-size: 80px; margin-bottom: 20px; animation: pulse 2s infinite; }
-.night-step-title {
-  font-family: var(--font-titre);
-  font-size: 22px; letter-spacing: 4px; color: var(--or-clair);
-  margin-bottom: 12px;
-}
-.night-step-sub {
-  font-size: 12px; color: var(--texte); line-height: 1.7;
-  margin-bottom: 30px; padding: 0 10px;
-}
-.night-progress-wrap {
-  width: 100%; height: 3px;
-  background: rgba(255,255,255,.08); border-radius: 2px;
-  margin-bottom: 30px; overflow: hidden;
-}
-.night-progress-bar {
-  height: 100%; width: 0%;
-  background: linear-gradient(90deg, var(--rouge), var(--or));
-  border-radius: 2px;
-}
-.btn-night {
-  padding: 14px 40px;
-  background: rgba(201,168,76,.1);
-  border: 1px solid rgba(201,168,76,.3); border-radius: 3px;
-  color: var(--or); font-family: var(--font-mono);
-  font-size: 11px; letter-spacing: 4px; cursor: pointer;
-  display: none; transition: background .2s;
-}
-.btn-night.show { display: inline-block; }
-.btn-night:active { background: rgba(201,168,76,.2); }
-
-/* ============================================
-   ÉCRAN JOUR
-============================================ */
-#screen-day {
-  background: var(--noir); z-index: 1; padding-bottom: 60px;
-}
-.day-header {
-  width: 100%; text-align: center;
-  padding: 40px 20px 16px;
-  border-bottom: 1px solid rgba(201,168,76,.1);
+.screen-inner {
   position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 480px;
+  padding: 24px 16px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
 }
-.day-round {
-  font-size: 9px; letter-spacing: 5px; color: var(--gris); margin-bottom: 6px;
-}
-.day-title {
+
+.logo-title {
   font-family: var(--font-titre);
-  font-size: 24px; letter-spacing: 6px; color: var(--or-clair);
+  font-size: clamp(28px, 8vw, 42px);
+  letter-spacing: 8px;
+  color: var(--or);
+  text-align: center;
+  animation: glow 3s infinite;
 }
-.wake-icon {
-  position: absolute; right: 20px; top: 44px;
-  font-size: 20px; cursor: pointer; opacity: .3;
-  transition: opacity .2s;
+.logo-sub {
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: var(--papier-dark);
+  text-align: center;
+  margin-top: -12px;
 }
-.wake-icon.active { opacity: 1; }
-
-/* Chrono */
-.chrono-section {
-  display: flex; flex-direction: column; align-items: center;
-  padding: 24px 20px 16px;
-}
-.chrono-ring {
-  position: relative; width: 130px; height: 130px; margin-bottom: 16px;
-}
-.chrono-svg { transform: rotate(-90deg); }
-.chrono-track { fill: none; stroke: rgba(255,255,255,.06); stroke-width: 6; }
-.chrono-fill  {
-  fill: none; stroke: var(--or); stroke-width: 6;
-  stroke-linecap: round;
-  stroke-dasharray: 339.3;
-  stroke-dashoffset: 0;
-  transition: stroke-dashoffset 1s linear, stroke .3s;
-}
-.chrono-time {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-titre); font-size: 28px; color: var(--or-clair);
-}
-.chrono-btns { display: flex; gap: 10px; }
-.chrono-btn {
-  padding: 10px 18px;
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.1); border-radius: 3px;
-  color: var(--texte); font-family: var(--font-mono);
-  font-size: 10px; letter-spacing: 2px; cursor: pointer;
-  transition: background .2s;
-}
-.chrono-btn:active { background: rgba(255,255,255,.1); }
-.chrono-btn.primary {
-  background: rgba(201,168,76,.1); border-color: rgba(201,168,76,.3); color: var(--or);
-}
-
-/* Elim button */
-.day-actions {
-  width: 100%; max-width: 420px; padding: 0 20px 16px;
-}
-.btn-elim-direct {
-  width: 100%; padding: 13px;
-  background: rgba(139,0,0,.1);
-  border: 1px solid rgba(139,0,0,.4); border-radius: 3px;
-  color: var(--rouge-vif); font-family: var(--font-mono);
-  font-size: 11px; letter-spacing: 3px; cursor: pointer;
-  transition: background .2s;
-}
-.btn-elim-direct:active { background: rgba(139,0,0,.25); }
-
-/* Vote section */
-.vote-section {
-  width: 100%; max-width: 420px; padding: 0 20px;
-}
-.vote-title {
-  font-size: 9px; letter-spacing: 4px; color: var(--gris);
-  text-align: center; margin-bottom: 14px;
-}
-.vote-phase-banner {
-  background: rgba(192,57,43,.12);
-  border: 1px solid rgba(192,57,43,.3); border-radius: 3px;
-  padding: 10px 14px; font-size: 11px; letter-spacing: 2px;
-  color: var(--rouge-vif); text-align: center;
-  margin-bottom: 14px; display: none;
-}
-.vote-phase-banner.show { display: block; }
-
-/* Players grid */
-.players-grid {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 10px; margin-bottom: 16px;
-}
-.player-card {
-  background: rgba(255,255,255,.03);
-  border: 1px solid rgba(255,255,255,.08); border-radius: 4px;
-  padding: 14px 12px; text-align: center; cursor: default;
-  transition: border-color .2s, background .2s;
-  position: relative; overflow: hidden;
-}
-.player-card.targeted {
-  border-color: var(--rouge-vif);
-  background: rgba(192,57,43,.1);
-  animation: pulse .8s infinite;
-}
-.player-card.eliminated {
-  opacity: .4; pointer-events: none;
-}
-.pc-elim-badge {
-  position: absolute; top: 4px; right: 6px; font-size: 14px; display: none;
-}
-.player-card.eliminated .pc-elim-badge { display: block; }
-.pc-name { font-size: 13px; color: var(--texte); margin-bottom: 6px; }
-.pc-votes { font-size: 10px; color: var(--gris); margin-bottom: 6px; }
-.vote-bar-wrap {
-  height: 3px; background: rgba(255,255,255,.06); border-radius: 2px; overflow: hidden;
-}
-.vote-bar {
-  height: 100%; background: var(--or); border-radius: 2px;
-  transition: width .4s ease;
-}
-.vote-bar.danger { background: var(--rouge-vif); }
-
-/* Vote summary */
-.vote-summary {
-  background: rgba(255,255,255,.02);
-  border: 1px solid rgba(255,255,255,.08); border-radius: 4px;
-  padding: 16px; margin-bottom: 14px; display: none;
-}
-.vote-summary.show { display: block; }
-.vs-title {
-  font-size: 9px; letter-spacing: 4px; color: var(--gris);
-  text-align: center; margin-bottom: 12px;
-}
-.vs-row {
-  display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
-}
-.vs-name { flex: 0 0 80px; font-size: 12px; color: var(--texte); }
-.vs-bar-wrap { flex: 1; height: 6px; background: rgba(255,255,255,.06); border-radius: 3px; overflow: hidden; }
-.vs-bar { height: 100%; border-radius: 3px; transition: width .6s ease; }
-.vs-count { flex: 0 0 20px; text-align: right; font-size: 12px; color: var(--or); }
-
-/* Vote buttons */
-.vote-btns { display: flex; gap: 10px; margin-bottom: 10px; }
-.btn-vote-action {
-  flex: 1; padding: 13px 10px;
-  border-radius: 3px; font-family: var(--font-mono);
-  font-size: 10px; letter-spacing: 2px; cursor: pointer;
-  transition: background .2s, transform .1s;
-}
-.btn-vote-action:active { transform: scale(.98); }
-.btn-vote-open {
-  background: rgba(192,57,43,.12);
-  border: 1px solid rgba(192,57,43,.35); color: var(--rouge-vif);
-}
-.btn-vote-skip {
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.1); color: var(--gris);
-}
-.btn-vote-confirm {
-  background: rgba(139,0,0,.2);
-  border: 1px solid rgba(192,57,43,.5); color: var(--rouge-vif);
-  padding: 14px; border-radius: 3px; font-family: var(--font-mono);
-  font-size: 11px; letter-spacing: 3px; cursor: pointer;
-  width: 100%; margin-top: 10px; display: none;
-}
-.btn-vote-confirm:active { transform: scale(.98); }
-.btn-next-night {
-  width: 100%; padding: 14px; margin-top: 10px;
-  background: rgba(10,10,30,.5);
-  border: 1px solid rgba(100,100,180,.2); border-radius: 3px;
-  color: rgba(180,180,220,.6); font-family: var(--font-mono);
-  font-size: 10px; letter-spacing: 3px; cursor: pointer;
-  display: none; transition: background .2s;
-}
-.btn-next-night.show { display: block; }
-.btn-next-night:active { background: rgba(10,10,30,.8); }
-
-/* ============================================
-   MODAL
-============================================ */
-.modal-overlay {
-  position: fixed; inset: 0; z-index: 1000;
-  background: rgba(0,0,0,.8); backdrop-filter: blur(4px);
-  display: none; align-items: center; justify-content: center;
-  padding: 20px;
-}
-.modal-overlay.show { display: flex; }
-.modal-box {
-  background: #111; border: 1px solid rgba(201,168,76,.3);
-  border-radius: 6px; padding: 24px; width: 100%; max-width: 340px;
-  animation: fadeUp .3s ease;
-}
-.modal-t {
-  font-family: var(--font-titre); font-size: 16px; letter-spacing: 3px;
-  color: var(--or-clair); margin-bottom: 12px; text-align: center;
-}
-.modal-p {
-  font-size: 12px; color: var(--texte); line-height: 1.6;
-  margin-bottom: 20px; text-align: center;
-}
-.modal-btns { display: flex; flex-direction: column; gap: 8px; }
-.modal-btn {
-  padding: 12px; border-radius: 3px; font-family: var(--font-mono);
-  font-size: 11px; letter-spacing: 3px; cursor: pointer; width: 100%;
-}
-.modal-btn.yes {
-  background: rgba(139,0,0,.2); border: 1px solid rgba(192,57,43,.5); color: var(--rouge-vif);
-}
-.modal-btn.no {
-  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); color: var(--gris);
+.divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--or), transparent);
+  opacity: .4;
 }
 
 /* ============================================
-   ÉCRAN FIN
+   BOUTONS
 ============================================ */
-#screen-end {
-  background: var(--noir); z-index: 1; padding-bottom: 40px;
+.btn {
+  position: relative;
+  overflow: hidden;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  letter-spacing: 3px;
+  font-size: 12px;
+  border-radius: 2px;
+  transition: transform .1s, opacity .1s;
+  user-select: none;
 }
-.end-wrap {
-  width: 100%; max-width: 420px;
-  padding: 50px 24px 30px; text-align: center;
-}
-.end-trophy { font-size: 64px; margin-bottom: 16px; animation: fadeUp .6s ease; }
-.end-result {
-  font-family: var(--font-titre); font-size: 36px; letter-spacing: 6px;
-  color: var(--vert-vif); animation: fadeUp .6s .1s both;
-}
-.end-sub {
-  font-size: 10px; letter-spacing: 4px; color: var(--gris);
-  margin-bottom: 30px; animation: fadeUp .6s .15s both;
-}
-.end-stats {
-  background: rgba(255,255,255,.02);
-  border: 1px solid rgba(255,255,255,.07); border-radius: 4px;
-  padding: 16px; margin-bottom: 20px; animation: fadeUp .6s .2s both;
-}
-.end-stats-title {
-  font-size: 9px; letter-spacing: 4px; color: var(--gris); margin-bottom: 12px;
-}
-.end-stat-row {
-  display: flex; justify-content: space-between;
-  font-size: 12px; padding: 6px 0;
-  border-bottom: 1px solid rgba(255,255,255,.05);
-}
-.end-stat-row:last-child { border-bottom: none; }
-.end-stat-val { color: var(--or); }
-.end-players {
-  margin-bottom: 20px; animation: fadeUp .6s .3s both;
-}
-.end-players-title {
-  font-size: 9px; letter-spacing: 4px; color: var(--gris); margin-bottom: 12px;
-}
-.end-row {
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.05);
+.btn:active { transform: scale(.96); opacity: .85; }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--rouge) 0%, #5c0000 100%);
+  color: var(--or-clair);
+  border: 1px solid rgba(201,168,76,.3);
+  padding: 16px 32px;
+  width: 100%;
   font-size: 13px;
 }
-.end-row:last-child { border-bottom: none; }
-.btn-share {
-  width: 100%; padding: 14px; margin-bottom: 12px;
-  background: rgba(52,152,219,.1);
-  border: 1px solid rgba(52,152,219,.3); border-radius: 3px;
-  color: #3498db; font-family: var(--font-mono);
-  font-size: 11px; letter-spacing: 3px; cursor: pointer;
-  animation: fadeUp .6s .5s both;
+.btn-secondary {
+  background: rgba(201,168,76,.08);
+  color: var(--or);
+  border: 1px solid rgba(201,168,76,.25);
+  padding: 12px 24px;
+  width: 100%;
 }
-.btn-share:active { transform: scale(.97); }
-.btn-restart {
-  width: 100%; padding: 17px;
-  background: linear-gradient(135deg, var(--rouge), #3d0000);
-  border: 2px solid var(--or); border-radius: 3px;
-  color: var(--or-clair); font-family: var(--font-titre);
-  font-size: 15px; letter-spacing: 3px; cursor: pointer;
-  animation: fadeUp .6s .6s both;
+.btn-ghost {
+  background: transparent;
+  color: var(--gris);
+  border: 1px solid rgba(255,255,255,.08);
+  padding: 10px 20px;
+  width: 100%;
+  font-size: 11px;
 }
-.btn-restart:active { transform: scale(.98); }
+.btn-danger {
+  background: rgba(139,0,0,.2);
+  color: var(--rouge-vif);
+  border: 1px solid rgba(192,57,43,.35);
+  padding: 12px 24px;
+  width: 100%;
+}
 
-/* Historique */
-.history-section {
-  width: 100%; max-width: 400px;
-  padding: 0 20px 40px; animation: fadeUp .6s .7s both;
+.ripple-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,.25);
+  width: 40px; height: 40px;
+  margin-top: -20px; margin-left: -20px;
+  animation: ripple .5s linear forwards;
+  pointer-events: none;
 }
-.history-title {
-  font-size: 9px; letter-spacing: 4px; color: var(--gris);
-  margin-bottom: 12px; text-align: center;
-}
-.history-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px 12px; margin-bottom: 8px;
-  background: rgba(255,255,255,.02);
-  border: 1px solid rgba(255,255,255,.06); border-radius: 4px; font-size: 11px;
-}
-.hi-date  { color: var(--gris); flex: 0 0 80px; }
-.hi-winner { flex: 1; }
-.hi-winner.police { color: #3498db; }
-.hi-winner.mafia  { color: var(--rouge-vif); }
-.hi-rounds { color: var(--or); }
 
 /* ============================================
    TOAST
 ============================================ */
-.toast {
-  position: fixed; bottom: 30px; left: 50%; z-index: 9999;
+#toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
   transform: translateX(-50%) translateY(80px);
-  background: rgba(30,30,30,.95);
-  border: 1px solid rgba(201,168,76,.3); border-radius: 4px;
-  padding: 12px 24px; font-size: 12px; letter-spacing: 2px;
-  color: var(--texte); pointer-events: none;
-  transition: transform .35s cubic-bezier(.34,1.56,.64,1), opacity .35s;
-  opacity: 0; white-space: nowrap;
+  background: rgba(20,15,10,.95);
+  border: 1px solid rgba(201,168,76,.3);
+  color: var(--texte);
+  padding: 12px 24px;
+  border-radius: 4px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  z-index: 9999;
+  transition: transform .3s ease, opacity .3s ease;
+  opacity: 0;
+  white-space: nowrap;
+  max-width: 90vw;
+  text-align: center;
 }
-.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+#toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
 
-/* RIPPLE */
-.ripple-el {
-  position: absolute; border-radius: 50%;
-  background: rgba(201,168,76,.3); pointer-events: none;
-  width: 40px; height: 40px; margin: -20px;
-  animation: ripple .6s ease-out forwards;
+/* ============================================
+   MODAL
+============================================ */
+#modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.85);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
 }
+#modalOverlay.show { display: flex; }
+
+.modal-box {
+  background: #0f0a05;
+  border: 1px solid rgba(201,168,76,.3);
+  border-radius: 4px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 360px;
+  animation: popIn .25s ease forwards;
+}
+.modal-title {
+  font-family: var(--font-titre);
+  font-size: 16px;
+  letter-spacing: 4px;
+  color: var(--or);
+  margin-bottom: 12px;
+  text-align: center;
+}
+.modal-body {
+  font-size: 12px;
+  color: var(--papier-dark);
+  text-align: center;
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+.modal-btns {
+  display: flex;
+  gap: 10px;
+}
+
+/* ============================================
+   SCREEN LAUNCH
+============================================ */
+.launch-badge {
+  font-size: 72px;
+  animation: fadeUp .8s ease forwards;
+  filter: drop-shadow(0 0 20px rgba(139,0,0,.6));
+}
+.launch-tagline {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--papier-dark);
+  text-align: center;
+  line-height: 1.8;
+}
+#btnResume {
+  display: none;
+}
+#btnResume.visible {
+  display: flex;
+}
+
+/* ============================================
+   SCREEN CONFIG
+============================================ */
+.section-label {
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: var(--or);
+  align-self: flex-start;
+  opacity: .7;
+}
+
+.player-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  animation: fadeUp .3s ease both;
+}
+.player-num {
+  width: 24px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--gris);
+  flex-shrink: 0;
+}
+.player-input {
+  flex: 1;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 2px;
+  color: var(--texte);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color .2s;
+}
+.player-input:focus {
+  border-color: rgba(201,168,76,.5);
+  background: rgba(201,168,76,.04);
+}
+.btn-del {
+  background: transparent;
+  border: 1px solid rgba(192,57,43,.3);
+  color: var(--rouge-vif);
+  width: 32px; height: 32px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 12px;
+  flex-shrink: 0;
+  transition: background .2s;
+}
+.btn-del:active { background: rgba(192,57,43,.2); }
+
+.options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+.option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 3px;
+}
+.option-label {
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--papier);
+}
+.option-sub {
+  font-size: 10px;
+  color: var(--gris);
+  letter-spacing: 1px;
+}
+
+/* Toggle */
+.toggle {
+  width: 44px; height: 24px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.15);
+  cursor: pointer;
+  position: relative;
+  transition: background .3s;
+  flex-shrink: 0;
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--gris);
+  top: 2px; left: 2px;
+  transition: transform .3s, background .3s;
+}
+.toggle.on {
+  background: rgba(139,0,0,.4);
+  border-color: rgba(192,57,43,.5);
+}
+.toggle.on::after {
+  transform: translateX(20px);
+  background: var(--rouge-vif);
+}
+
+/* Groupes de boutons */
+.btn-group {
+  display: flex;
+  gap: 6px;
+}
+.btn-seg {
+  flex: 1;
+  padding: 8px 4px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 2px;
+  color: var(--gris);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-seg.active {
+  background: rgba(139,0,0,.25);
+  border-color: rgba(192,57,43,.5);
+  color: var(--or-clair);
+}
+
+.cfg-err {
+  font-size: 11px;
+  color: var(--rouge-vif);
+  letter-spacing: 1px;
+  min-height: 16px;
+  text-align: center;
+}
+
+/* ============================================
+   SCREEN REVEAL
+============================================ */
+.rv-header {
+  text-align: center;
+  width: 100%;
+}
+.rv-turn {
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: var(--gris);
+}
+.rv-name {
+  font-family: var(--font-titre);
+  font-size: clamp(22px, 6vw, 32px);
+  color: var(--or);
+  letter-spacing: 4px;
+  margin-top: 4px;
+}
+.rv-dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.rv-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.15);
+  transition: all .3s;
+}
+.rv-dot.done { background: var(--gris); border-color: var(--gris); }
+.rv-dot.cur  { background: var(--or);   border-color: var(--or); transform: scale(1.3); }
+
+/* Card rôle */
+.role-card {
+  width: 100%;
+  background: rgba(10,5,0,.8);
+  border: 1px solid rgba(201,168,76,.2);
+  border-radius: 6px;
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  opacity: 0;
+  transform: scale(.9);
+  transition: all .4s cubic-bezier(.175,.885,.32,1.275);
+}
+.role-card.show { opacity: 1; transform: scale(1); }
+
+.rc-img-wrap {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  border: 2px solid;
+}
+.rc-img-wrap.mafia  { border-color: var(--rouge-vif); background: rgba(139,0,0,.2); }
+.rc-img-wrap.under  { border-color: #8e44ad;          background: rgba(142,68,173,.15); }
+.rc-img-wrap.doctor { border-color: var(--vert-vif);  background: rgba(39,174,96,.15); }
+.rc-img-wrap.police { border-color: var(--or);        background: rgba(201,168,76,.1); }
+
+.rc-title {
+  font-family: var(--font-titre);
+  font-size: 22px;
+  letter-spacing: 4px;
+}
+.rc-title.mafia  { color: var(--rouge-vif); }
+.rc-title.under  { color: #8e44ad; }
+.rc-title.doctor { color: var(--vert-vif); }
+.rc-title.police { color: var(--or); }
+
+.rc-desc {
+  font-size: 11px;
+  color: var(--papier-dark);
+  text-align: center;
+  line-height: 1.7;
+  letter-spacing: .5px;
+}
+
+.rv-cover {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.9);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+}
+.rv-cover-icon { font-size: 40px; }
+.rv-cover-hint {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--gris);
+}
+
+.rv-card-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.rv-hint {
+  font-size: 11px;
+  color: var(--or);
+  text-align: center;
+  letter-spacing: 1px;
+  min-height: 20px;
+  animation: fadeUp .3s ease;
+}
+
+/* ============================================
+   SCREEN NIGHT
+============================================ */
+#screen-night {
+  background: radial-gradient(ellipse at 50% 30%, #0d0020 0%, var(--noir) 70%);
+}
+
+.night-badge {
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: #6a5acd;
+  border: 1px solid rgba(106,90,205,.3);
+  padding: 4px 14px;
+  border-radius: 20px;
+}
+.night-icon {
+  font-size: 72px;
+  filter: drop-shadow(0 0 20px rgba(106,90,205,.5));
+  animation: pulse 2s infinite;
+}
+.night-step-title {
+  font-family: var(--font-titre);
+  font-size: clamp(18px, 5vw, 26px);
+  color: var(--or);
+  text-align: center;
+  letter-spacing: 3px;
+}
+.night-step-sub {
+  font-size: 12px;
+  color: var(--papier-dark);
+  text-align: center;
+  line-height: 1.8;
+  max-width: 320px;
+  letter-spacing: .5px;
+}
+.night-progress {
+  width: 100%;
+  height: 2px;
+  background: rgba(255,255,255,.08);
+  border-radius: 1px;
+  overflow: hidden;
+}
+.night-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #6a5acd, var(--or));
+  transition: width .6s ease;
+}
+
+#nightBtn {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .3s, transform .3s;
+}
+#nightBtn.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================
+   SCREEN DAY
+============================================ */
+#screen-day {
+  background: radial-gradient(ellipse at 50% 0%, #1a0a00 0%, var(--noir) 60%);
+}
+
+.day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.day-round {
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: var(--or);
+  opacity: .7;
+}
+.day-title {
+  font-family: var(--font-titre);
+  font-size: clamp(20px, 5vw, 28px);
+  color: var(--or);
+  letter-spacing: 4px;
+}
+
+/* Chrono */
+.chrono-wrap {
+  position: relative;
+  width: 140px; height: 140px;
+}
+.chrono-svg {
+  width: 100%; height: 100%;
+  transform: rotate(-90deg);
+}
+.chrono-bg   { fill: none; stroke: rgba(255,255,255,.06); stroke-width: 6; }
+.chrono-fill {
+  fill: none;
+  stroke: var(--or);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 339.3;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset .9s linear, stroke .5s;
+}
+.chrono-time {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  letter-spacing: 2px;
+  color: var(--or);
+  font-family: var(--font-mono);
+}
+.chrono-btns {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Grille joueurs */
+.players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+.player-card {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 4px;
+  padding: 14px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition: all .2s;
+  min-height: 90px;
+}
+.player-card:active { transform: scale(.97); }
+.player-card.eliminated {
+  opacity: .35;
+  filter: grayscale(1);
+}
+.player-card.targeted {
+  border-color: var(--rouge-vif);
+  background: rgba(192,57,43,.08);
+  box-shadow: 0 0 12px rgba(192,57,43,.2);
+}
+
+.pc-elim-badge {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  opacity: 0;
+  transition: opacity .3s;
+}
+.eliminated .pc-elim-badge { opacity: .5; }
+
+.pc-name {
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: var(--texte);
+  text-align: center;
+  word-break: break-word;
+}
+.pc-votes {
+  font-size: 11px;
+  color: var(--rouge-vif);
+  min-height: 14px;
+  letter-spacing: 1px;
+}
+
+.vote-bar-wrap {
+  width: 100%;
+  height: 3px;
+  background: rgba(255,255,255,.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.vote-bar {
+  height: 100%;
+  background: var(--or);
+  border-radius: 2px;
+  transition: width .3s ease;
+}
+.vote-bar.danger { background: var(--rouge-vif); }
+
+/* Vote UI */
+.vote-banner {
+  width: 100%;
+  background: rgba(139,0,0,.12);
+  border: 1px solid rgba(192,57,43,.3);
+  border-radius: 4px;
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--rouge-vif);
+  display: none;
+  animation: slideDown .3s ease;
+}
+.vote-banner.show { display: block; }
+
+.vote-summary {
+  width: 100%;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 4px;
+  padding: 14px;
+  display: none;
+}
+.vote-summary.show { display: block; }
+.vs-title {
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--gris);
+  margin-bottom: 10px;
+}
+.vs-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.vs-name  { width: 80px; font-size: 11px; color: var(--texte); flex-shrink: 0; }
+.vs-bar-wrap { flex: 1; height: 4px; background: rgba(255,255,255,.06); border-radius: 2px; overflow: hidden; }
+.vs-bar   { height: 100%; border-radius: 2px; transition: width .4s ease; }
+.vs-count { width: 20px; text-align: right; font-size: 11px; color: var(--or); flex-shrink: 0; }
+
+#btnNextNight {
+  display: none;
+}
+#btnNextNight.show { display: flex; }
+
+/* ============================================
+   SCREEN END
+============================================ */
+.end-trophy {
+  font-size: 80px;
+  animation: popIn .5s ease .2s both;
+  filter: drop-shadow(0 0 30px rgba(201,168,76,.5));
+}
+.end-result {
+  font-family: var(--font-titre);
+  font-size: clamp(28px, 8vw, 40px);
+  letter-spacing: 6px;
+  animation: fadeUp .5s ease .4s both;
+}
+.end-sub {
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: var(--papier-dark);
+  animation: fadeUp .5s ease .5s both;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+.stat-box {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 4px;
+  padding: 14px 10px;
+  text-align: center;
+}
+.stat-val {
+  font-size: 28px;
+  color: var(--or);
+  font-family: var(--font-titre);
+}
+.stat-lbl {
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--gris);
+  margin-top: 4px;
+}
+
+.end-players {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.end-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 3px;
+  font-size: 11px;
+  width: 100%;
+}
+.hi-date   { color: var(--gris); flex: 1; }
+.hi-winner { letter-spacing: 1px; }
+.hi-winner.police { color: var(--or); }
+.hi-winner.mafia  { color: var(--rouge-vif); }
+.hi-rounds { color: var(--gris); font-size: 10px; }
+
 </style>
 </head>
 <body>
 
 <!-- ÉTOILES -->
-<div class="stars-bg" id="starsBg"></div>
+<div id="starsBg"></div>
 
 <!-- TOAST -->
-<div class="toast" id="toast"></div>
+<div id="toast"></div>
 
-<!-- MODAL GÉNÉRIQUE -->
-<div class="modal-overlay" id="modalOverlay">
+<!-- MODAL -->
+<div id="modalOverlay">
   <div class="modal-box">
-    <div class="modal-t"  id="modalTitle"></div>
-    <div class="modal-p"  id="modalBody"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-body"  id="modalBody"></div>
     <div class="modal-btns">
-      <button class="modal-btn yes" id="modalYes">CONFIRMER</button>
-      <button class="modal-btn no"  id="modalNo">ANNULER</button>
+      <button class="btn btn-danger"    id="modalNo">ANNULER</button>
+      <button class="btn btn-primary"   id="modalYes">CONFIRMER</button>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     ÉCRAN 1 — LAUNCH
-══════════════════════════════════════════ -->
+<!-- ============================================
+     SCREEN LAUNCH
+============================================ -->
 <div class="screen active" id="screen-launch">
-  <div class="launch-inner">
-    <div class="launch-hat">🎩</div>
-    <div class="launch-title">MAFIA NOIR</div>
-    <div class="launch-sub">JEU DE RÔLES & DE DÉDUCTION</div>
-    <div class="launch-divider"></div>
-    <button class="btn-launch" onclick="onLaunch()">COMMENCER</button>
-    <br>
-    <button class="launch-resume" id="btnResume" onclick="onResume()">▶ REPRENDRE LA PARTIE</button>
+  <div class="screen-inner" style="justify-content:center;min-height:100vh;">
+    <div class="launch-badge">🎩</div>
+    <div class="logo-title">MAFIA NOIR</div>
+    <div class="logo-sub">LE JEU DE DÉDUCTION SOCIALE</div>
+    <div class="divider"></div>
+    <p class="launch-tagline">
+      Mentez. Déduisez. Survivez.<br>
+      Un jeu pour 3 à 12 joueurs.
+    </p>
+    <button class="btn btn-primary" onclick="onLaunch()">
+      ▶ NOUVELLE PARTIE
+    </button>
+    <button class="btn btn-secondary" id="btnResume" onclick="onResume()">
+      ↩ REPRENDRE LA PARTIE
+    </button>
+    <button class="btn btn-ghost" onclick="showScreen('screen-rules')">
+      📖 RÈGLES DU JEU
+    </button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     ÉCRAN 2 — CONFIG
-══════════════════════════════════════════ -->
+<!-- ============================================
+     SCREEN CONFIG
+============================================ -->
 <div class="screen" id="screen-config">
-  <div class="cfg-header">
-    <div class="cfg-title">AGENTS</div>
-    <div class="cfg-sub">ENREGISTREZ LES JOUEURS</div>
-  </div>
-  <div class="cfg-body">
-    <div id="playerList"></div>
-    <button class="btn-add" onclick="addPlayer()">+ AJOUTER UN JOUEUR</button>
+  <div class="screen-inner">
+    <div class="logo-title" style="font-size:24px">MAFIA NOIR</div>
+    <div class="divider"></div>
 
-    <div class="cfg-section">
-      <div class="cfg-section-title">RÔLES SPÉCIAUX</div>
-      <div class="toggle-row">
+    <span class="section-label">👥 JOUEURS</span>
+    <div id="playerList" style="width:100%;display:flex;flex-direction:column;gap:8px;"></div>
+    <button class="btn btn-secondary" onclick="addPlayer()" style="margin-top:-4px">
+      + AJOUTER UN JOUEUR
+    </button>
+
+    <div class="divider"></div>
+    <span class="section-label">⚙️ OPTIONS</span>
+
+    <div class="options-grid">
+      <div class="option-row">
         <div>
-          <div class="toggle-label">🕵️ Infiltré</div>
-          <div class="toggle-sub">Voit la Mafia, but inconnu</div>
+          <div class="option-label">🕵️ INFILTRÉ</div>
+          <div class="option-sub">Mafia qui connaît la Mafia</div>
         </div>
         <div class="toggle on" id="tglUnder" onclick="toggle('tglUnder','hasUndercover')"></div>
       </div>
-      <div class="toggle-row">
+      <div class="option-row">
         <div>
-          <div class="toggle-label">💊 Médecin</div>
-          <div class="toggle-sub">Peut sauver 1 joueur par nuit</div>
+          <div class="option-label">💊 MÉDECIN</div>
+          <div class="option-sub">Protège un joueur chaque nuit</div>
         </div>
         <div class="toggle" id="tglDoc" onclick="toggle('tglDoc','hasDoctor')"></div>
       </div>
-    </div>
-
-    <div class="cfg-section">
-      <div class="cfg-section-title">DIFFICULTÉ</div>
-      <div class="diff-row">
-        <button class="diff-btn" id="diff-easy"   onclick="setDiff('easy')">😌 FACILE</button>
-        <button class="diff-btn active" id="diff-normal" onclick="setDiff('normal')">⚖️ NORMAL</button>
-        <button class="diff-btn" id="diff-hard"   onclick="setDiff('hard')">💀 DIFFICILE</button>
+      <div class="option-row">
+        <div>
+          <div class="option-label">⚡ DIFFICULTÉ</div>
+          <div class="option-sub">Nombre de mafieux</div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-seg" id="diff-easy"   onclick="setDiff('easy')">FACILE</button>
+          <button class="btn-seg active" id="diff-normal" onclick="setDiff('normal')">NORMAL</button>
+          <button class="btn-seg" id="diff-hard"   onclick="setDiff('hard')">DUR</button>
+        </div>
       </div>
-    </div>
-
-    <div class="cfg-section">
-      <div class="cfg-section-title">DURÉE DU DÉBAT</div>
-      <div class="dur-row">
-        <button class="dur-btn" id="dur-3"  onclick="setDur(3)">3 MIN</button>
-        <button class="dur-btn active" id="dur-5"  onclick="setDur(5)">5 MIN</button>
-        <button class="dur-btn" id="dur-10" onclick="setDur(10)">10 MIN</button>
+      <div class="option-row">
+        <div>
+          <div class="option-label">⏱ DÉBAT</div>
+          <div class="option-sub">Durée de discussion</div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-seg" id="dur-3"  onclick="setDur(3)">3 MIN</button>
+          <button class="btn-seg active" id="dur-5"  onclick="setDur(5)">5 MIN</button>
+          <button class="btn-seg" id="dur-10" onclick="setDur(10)">10 MIN</button>
+        </div>
       </div>
     </div>
 
     <div class="cfg-err" id="cfgErr"></div>
-    <button class="btn-start" onclick="startGame()">▶ LANCER LA PARTIE</button>
+    <button class="btn btn-primary" onclick="startGame()">
+      🎩 LANCER LA PARTIE
+    </button>
+    <button class="btn btn-ghost" onclick="showScreen('screen-launch')">
+      ← RETOUR
+    </button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     ÉCRAN 3 — REVEAL
-══════════════════════════════════════════ -->
+<!-- ============================================
+     SCREEN REVEAL
+============================================ -->
 <div class="screen" id="screen-reveal">
-  <div class="rv-wrap">
-    <div class="rv-turn" id="rvTurn">JOUEUR 1 / 4</div>
-    <div class="rv-name" id="rvName">NOM</div>
+  <div class="screen-inner">
+    <div class="logo-sub" style="margin-top:8px">DISTRIBUTION DES RÔLES</div>
+    <div class="rv-header">
+      <div class="rv-turn" id="rvTurn">JOUEUR 1 / 4</div>
+      <div class="rv-name" id="rvName">ALICE</div>
+    </div>
     <div class="rv-dots" id="rvDots"></div>
 
-    <div class="rv-cover" id="rvCover" onclick="showRole()">
-      <div class="rv-cover-icon">👁️</div>
-      <div class="rv-cover-text">APPUYER POUR RÉVÉLER</div>
-    </div>
-
-    <div class="role-card" id="roleCard">
-      <div class="rc-img-wrap" id="rcImg">🎭</div>
-      <div class="rc-title" id="rcTitle">RÔLE</div>
-      <div class="rc-desc"  id="rcDesc"></div>
+    <div class="rv-card-wrap">
+      <div class="role-card" id="roleCard">
+        <div class="rc-img-wrap" id="rcImg">🎭</div>
+        <div class="rc-title"   id="rcTitle">RÔLE</div>
+        <div class="rc-desc"    id="rcDesc"></div>
+      </div>
+      <div class="rv-cover" id="rvCover" onclick="showRole()">
+        <div class="rv-cover-icon">👁️</div>
+        <div class="rv-cover-hint">APPUYEZ POUR RÉVÉLER</div>
+      </div>
     </div>
 
     <div class="rv-hint" id="rvHint"></div>
-    <button class="btn-next-rv" id="btnNextRv" onclick="nextReveal()">JOUEUR SUIVANT →</button>
+
+    <button class="btn btn-primary" id="btnNextRv" onclick="nextReveal()">
+      JOUEUR SUIVANT →
+    </button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     ÉCRAN 4 — NUIT
-══════════════════════════════════════════ -->
+<!-- ============================================
+     SCREEN NIGHT
+============================================ -->
 <div class="screen" id="screen-night">
-  <div class="night-wrap">
-    <div class="night-round-badge" id="nightRoundBadge">MANCHE 1</div>
-    <div class="night-icon"        id="nightIcon">🌑</div>
-    <div class="night-step-title"  id="nightStepTitle">La nuit tombe…</div>
-    <div class="night-step-sub"    id="nightStepSub">Tout le monde ferme les yeux.</div>
-    <div class="night-progress-wrap">
-      <div class="night-progress-bar" id="nightProgressBar"></div>
+  <div class="screen-inner" style="justify-content:center;min-height:100vh;gap:28px;">
+    <div class="night-badge" id="nightRoundBadge">MANCHE 1</div>
+    <div class="night-icon"  id="nightIcon">🌑</div>
+    <div class="night-step-title" id="nightStepTitle">La nuit tombe…</div>
+    <div class="night-step-sub"   id="nightStepSub">Tout le monde ferme les yeux.</div>
+    <div class="night-progress">
+      <div class="night-progress-bar" id="nightProgressBar" style="width:0%"></div>
     </div>
-    <button class="btn-night" id="nightBtn" onclick="nightBtnClick()">CONTINUER →</button>
+    <button class="btn btn-primary" id="nightBtn" onclick="nightBtnClick()">
+      CONTINUER →
+    </button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     ÉCRAN 5 — JOUR
-══════════════════════════════════════════ -->
+<!-- ============================================
+     SCREEN DAY
+============================================ -->
 <div class="screen" id="screen-day">
-  <div class="day-header">
-    <div class="day-round" id="dayRound">MANCHE 1</div>
-    <div class="day-title">DÉLIBÉRATION</div>
-    <div class="wake-icon" id="wakeIcon" title="Garder l'écran allumé">☀️</div>
-  </div>
+  <div class="screen-inner">
+    <div class="day-header">
+      <div class="day-round" id="dayRound">MANCHE 1</div>
+      <div class="day-title">DÉBAT</div>
+      <div style="width:60px"></div>
+    </div>
 
-  <!-- Chrono -->
-  <div class="chrono-section">
-    <div class="chrono-ring">
-      <svg class="chrono-svg" width="130" height="130" viewBox="0 0 130 130">
-        <circle class="chrono-track" cx="65" cy="65" r="54"/>
-        <circle class="chrono-fill" id="chronoFill" cx="65" cy="65" r="54"
-          stroke-dasharray="339.3" stroke-dashoffset="0"/>
+    <!-- Chrono -->
+    <div class="chrono-wrap">
+      <svg class="chrono-svg" viewBox="0 0 120 120">
+        <circle class="chrono-bg"   cx="60" cy="60" r="54"/>
+        <circle class="chrono-fill" id="chronoFill" cx="60" cy="60" r="54"/>
       </svg>
       <div class="chrono-time" id="chronoTime">5:00</div>
     </div>
+
     <div class="chrono-btns">
-      <button class="chrono-btn primary" id="btnChronoToggle" onclick="toggleChrono()">⏸ PAUSE</button>
-      <button class="chrono-btn" onclick="addMinute()">+1 MIN</button>
-    </div>
-  </div>
-
-  <!-- Élimination directe -->
-  <div class="day-actions">
-    <button class="btn-elim-direct" onclick="confirmElim()">✂ ÉLIMINER UN JOUEUR</button>
-  </div>
-
-  <!-- Vote -->
-  <div class="vote-section">
-    <div class="vote-title">— VOTE DU PEUPLE —</div>
-
-    <div class="vote-phase-banner" id="voteBanner">
-      🗳️ VOTE EN COURS — Chaque joueur désigne son suspect
+      <button class="btn btn-secondary" style="flex:1" id="btnChronoToggle" onclick="toggleChrono()">
+        ⏸ PAUSE
+      </button>
+      <button class="btn btn-ghost" style="flex:0 0 auto;padding:12px 16px" onclick="addMinute()">
+        +1 MIN
+      </button>
     </div>
 
+    <div class="divider"></div>
+
+    <!-- Grille joueurs -->
     <div class="players-grid" id="playersGrid"></div>
 
+    <!-- Vote -->
+    <div class="vote-banner" id="voteBanner">
+      🗳️ VOTE EN COURS — Appuyez sur un joueur pour voter
+    </div>
+
     <div class="vote-summary" id="voteSummary">
-      <div class="vs-title">RÉSULTAT DU VOTE</div>
+      <div class="vs-title">RÉSULTATS DU VOTE</div>
       <div id="voteSummaryRows"></div>
     </div>
 
-    <div class="vote-btns">
-      <button class="btn-vote-action btn-vote-open" id="btnVoteOpen" onclick="openVote()">
-        🗳️ LANCER LE VOTE
-      </button>
-      <button class="btn-vote-action btn-vote-skip" onclick="skipToNight()">
-        PASSER LA NUIT →
-      </button>
-    </div>
-    <button class="btn-vote-confirm" id="btnVoteConfirm" onclick="confirmVoteElim()">
-      ☠ ÉLIMINER LE PLUS VOTÉ
+    <!-- Actions -->
+    <button class="btn btn-secondary" id="btnVoteOpen" onclick="openVote()">
+      🗳️ LANCER LE VOTE
     </button>
-    <button class="btn-next-night" id="btnNextNight" onclick="goToNight()">
+    <button class="btn btn-danger" id="btnVoteConfirm"
+      style="display:none" onclick="confirmVoteElim()">
+      💀 ÉLIMINER LE JOUEUR DÉSIGNÉ
+    </button>
+    <button class="btn btn-danger" onclick="confirmElim()" style="margin-top:-8px">
+      ✕ ÉLIMINATION DIRECTE
+    </button>
+    <button class="btn btn-primary" id="btnNextNight" onclick="skipToNight()">
       🌑 PASSER À LA NUIT SUIVANTE
+    </button>
+    <button class="btn btn-ghost" onclick="openModal('ABANDONNER ?',
+      'La partie sera perdue. Retourner au menu ?',
+      () => { clearSavedGame(); showScreen(\'screen-launch\'); })">
+      ← MENU
     </button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     ÉCRAN 6 — FIN
-══════════════════════════════════════════ -->
+<!-- ============================================
+     SCREEN END
+============================================ -->
 <div class="screen" id="screen-end">
-  <div class="end-wrap">
+  <div class="screen-inner">
     <div class="end-trophy" id="endTrophy">🏆</div>
-    <div class="end-result" id="endResult">VICTOIRE</div>
-    <div class="end-sub"    id="endSub">LA POLICE A TRIOMPHÉ</div>
+    <div class="end-result"  id="endResult">VICTOIRE</div>
+    <div class="end-sub"     id="endSub">LA POLICE A TRIOMPHÉ</div>
+    <div class="divider"></div>
 
-    <div class="end-stats">
-      <div class="end-stats-title">STATISTIQUES</div>
-      <div class="end-stat-row"><span>Manches jouées</span><span class="end-stat-val" id="statRounds">—</span></div>
-      <div class="end-stat-row"><span>Joueurs éliminés</span><span class="end-stat-val" id="statElim">—</span></div>
-      <div class="end-stat-row"><span>Votes effectués</span><span class="end-stat-val" id="statVotes">—</span></div>
-      <div class="end-stat-row"><span>Survivants</span><span class="end-stat-val" id="statSurv">—</span></div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-val" id="statRounds">—</div>
+        <div class="stat-lbl">MANCHES</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="statElim">—</div>
+        <div class="stat-lbl">ÉLIMINÉS</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="statVotes">—</div>
+        <div class="stat-lbl">VOTES</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="statSurv">—</div>
+        <div class="stat-lbl">SURVIVANTS</div>
+      </div>
     </div>
 
-    <div class="end-players">
-      <div class="end-players-title">— RÉVÉLATION DES RÔLES —</div>
-      <div id="endPlayersList"></div>
-    </div>
+    <span class="section-label">🃏 RÔLES RÉVÉLÉS</span>
+    <div class="end-players" id="endPlayersList"></div>
 
-    <button class="btn-share"   onclick="shareResult()">📤 PARTAGER LE RÉSULTAT</button>
-    <button class="btn-restart" onclick="restartGame()">↺ NOUVELLE PARTIE</button>
+    <div class="divider"></div>
+    <button class="btn btn-secondary" onclick="shareResult()">
+      📤 PARTAGER LE RÉSULTAT
+    </button>
+    <button class="btn btn-primary"  onclick="restartGame()">
+      🔄 NOUVELLE PARTIE
+    </button>
+
+    <div id="historySection" style="width:100%;display:none;">
+      <div class="divider"></div>
+      <span class="section-label">📜 HISTORIQUE</span>
+      <div id="historyList"
+        style="width:100%;display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+      </div>
+    </div>
   </div>
+</div>
 
-  <div class="history-section" id="historySection">
-    <div class="history-title">— HISTORIQUE —</div>
-    <div id="historyList"></div>
+<!-- ============================================
+     SCREEN RULES
+============================================ -->
+<div class="screen" id="screen-rules">
+  <div class="screen-inner">
+    <div class="logo-title" style="font-size:22px">📖 RÈGLES</div>
+    <div class="divider"></div>
+    <div style="font-size:12px;color:var(--papier-dark);line-height:2;letter-spacing:.5px;width:100%;">
+      <p><span style="color:var(--or)">🎩 BUT DU JEU</span><br>
+      La Police doit éliminer tous les membres de la Mafia avant d'être en minorité.</p>
+      <br>
+      <p><span style="color:var(--rouge-vif)">🔫 MAFIA</span><br>
+      Connaît ses alliés. Élimine un citoyen chaque nuit. Doit se fondre dans la masse.</p>
+      <br>
+      <p><span style="color:#8e44ad">🕵️ INFILTRÉ</span><br>
+      Membre de la Mafia qui connaît les autres mafieux. Joue un rôle double.</p>
+      <br>
+      <p><span style="color:var(--vert-vif)">💊 MÉDECIN</span><br>
+      Chaque nuit, peut protéger un joueur de l'élimination. Ne peut se protéger deux nuits de suite.</p>
+      <br>
+      <p><span style="color:var(--or)">🚔 POLICE</span><br>
+      Les citoyens innocents. Débattent le jour pour identifier et éliminer les mafieux.</p>
+      <br>
+      <p><span style="color:var(--or)">🌑 NUIT</span><br>
+      Tout le monde ferme les yeux. La Mafia se désigne une victime silencieusement.</p>
+      <br>
+      <p><span style="color:var(--or)">☀️ JOUR</span><br>
+      Discussion, débat, puis vote pour éliminer un suspect.</p>
+    </div>
+    <button class="btn btn-ghost" onclick="showScreen('screen-launch')">← RETOUR</button>
   </div>
 </div>
 
 <script>
+
 /* ============================================
    ÉTAT GLOBAL
 ============================================ */
@@ -969,22 +1211,44 @@ const G = {
   votes:         {},
   votersDone:    new Set(),
   voteTarget:    null,
-  nightStep:     0,
-  nightTimer:    null,
-  wakeLock:      null,
-  wakeActive:    false,
   totalElim:     0,
   totalVotes:    0,
-  doctorSave:    null,
   revealIdx:     0,
   roleShown:     false,
+  nightStep:     0,
+  doctorSave:    null,
+  wakeLock:      null,
+  wakeActive:    false,
 };
 
+/* ============================================
+   DÉFINITIONS DES RÔLES
+============================================ */
 const ROLE_DEF = {
-  mafia:  { label:'LA MAFIA',    cls:'mafia',  emoji:'🔫', desc:'Élimine discrètement les policiers chaque nuit. Restez dans l\'ombre.' },
-  police: { label:'LA POLICE',   cls:'police', emoji:'🚔', desc:'Identifiez et éliminez les membres de la Mafia avant qu\'il ne soit trop tard.' },
-  under:  { label:'L\'INFILTRÉ', cls:'under',  emoji:'🕵️', desc:'Vous connaissez la Mafia. Guidez la Police sans révéler votre identité.' },
-  doctor: { label:'LE MÉDECIN',  cls:'police', emoji:'💊', desc:'Chaque nuit, désignez un joueur à protéger contre l\'élimination de la Mafia.' },
+  mafia:  {
+    label: 'MAFIA',
+    emoji: '🔫',
+    cls:   'mafia',
+    desc:  'Vous faites partie de la Mafia. Chaque nuit, désignez silencieusement une victime avec vos alliés. Le jour, cachez-vous parmi les innocents.',
+  },
+  under:  {
+    label: 'INFILTRÉ',
+    emoji: '🕵️',
+    cls:   'under',
+    desc:  'Vous êtes l\'Infiltré. Vous connaissez la Mafia et ils vous connaissent. Agissez dans l\'ombre.',
+  },
+  doctor: {
+    label: 'MÉDECIN',
+    emoji: '💊',
+    cls:   'doctor',
+    desc:  'Vous êtes le Médecin. Chaque nuit, choisissez un joueur à protéger. Vous ne pouvez pas vous protéger deux nuits de suite.',
+  },
+  police: {
+    label: 'POLICE',
+    emoji: '🚔',
+    cls:   'police',
+    desc:  'Vous êtes un citoyen de la Police. Débattez, observez, et votez pour éliminer les mafieux.',
+  },
 };
 
 /* ============================================
@@ -994,6 +1258,70 @@ function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   document.getElementById(id).scrollTop = 0;
+}
+
+/* ============================================
+   UTILITAIRES
+============================================ */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function haptic(pattern) {
+  if (navigator.vibrate) navigator.vibrate(pattern);
+}
+
+function addRipple(e, el) {
+  const r    = document.createElement('div');
+  r.className = 'ripple-circle';
+  const rect = el.getBoundingClientRect();
+  r.style.left = (e.clientX - rect.left) + 'px';
+  r.style.top  = (e.clientY - rect.top)  + 'px';
+  el.appendChild(r);
+  setTimeout(() => r.remove(), 600);
+}
+
+/* ============================================
+   WAKE LOCK
+============================================ */
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      G.wakeLock  = await navigator.wakeLock.request('screen');
+      G.wakeActive = true;
+    }
+  } catch(e) {}
+}
+
+function releaseWakeLock() {
+  if (G.wakeLock) { G.wakeLock.release().catch(() => {}); G.wakeLock = null; }
+  G.wakeActive = false;
+}
+
+/* ============================================
+   HISTORIQUE LOCAL
+============================================ */
+function saveHistory(winner) {
+  try {
+    const hist = loadHistory();
+    hist.unshift({
+      date:   new Date().toLocaleDateString('fr-FR'),
+      winner,
+      rounds: G.round,
+      players: G.players.length,
+    });
+    localStorage.setItem('mafia_history', JSON.stringify(hist.slice(0, 10)));
+  } catch(e) {}
+}
+
+function loadHistory() {
+  try {
+    return JSON.parse(localStorage.getItem('mafia_history') || '[]');
+  } catch(e) { return []; }
 }
 
 /* ============================================
@@ -1082,85 +1410,6 @@ function currentScreen() {
 
 function clearSavedGame() {
   try { localStorage.removeItem('mafia_state'); } catch(e) {}
-}
-
-/* ============================================
-   HISTORIQUE localStorage
-============================================ */
-function saveHistory(winner) {
-  try {
-    const hist = loadHistory();
-    const now  = new Date();
-    const date = now.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit' });
-    hist.unshift({ date, winner, rounds: G.round, players: G.players.length });
-    if (hist.length > 10) hist.length = 10;
-    localStorage.setItem('mafia_history', JSON.stringify(hist));
-  } catch(e) {}
-}
-
-function loadHistory() {
-  try {
-    return JSON.parse(localStorage.getItem('mafia_history') || '[]');
-  } catch(e) { return []; }
-}
-
-/* ============================================
-   WAKE LOCK
-============================================ */
-async function requestWakeLock() {
-  try {
-    if ('wakeLock' in navigator) {
-      G.wakeLock   = await navigator.wakeLock.request('screen');
-      G.wakeActive = true;
-      document.getElementById('wakeIcon').classList.add('active');
-    }
-  } catch(e) {}
-}
-
-function releaseWakeLock() {
-  try {
-    if (G.wakeLock) { G.wakeLock.release(); G.wakeLock = null; }
-    G.wakeActive = false;
-    document.getElementById('wakeIcon').classList.remove('active');
-  } catch(e) {}
-}
-
-document.getElementById('wakeIcon').addEventListener('click', () => {
-  G.wakeActive ? releaseWakeLock() : requestWakeLock();
-});
-
-/* ============================================
-   HAPTIC
-============================================ */
-function haptic(pattern = [10]) {
-  if (navigator.vibrate) navigator.vibrate(pattern);
-}
-
-/* ============================================
-   TOAST
-============================================ */
-let toastTimer = null;
-function showToast(msg, dur = 2500) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), dur);
-}
-
-/* ============================================
-   RIPPLE
-============================================ */
-function addRipple(e, el) {
-  const r = document.createElement('div');
-  r.className = 'ripple-el';
-  const rect = el.getBoundingClientRect();
-  r.style.left = (e.clientX - rect.left) + 'px';
-  r.style.top  = (e.clientY - rect.top)  + 'px';
-  el.style.position = 'relative';
-  el.style.overflow = 'hidden';
-  el.appendChild(r);
-  setTimeout(() => r.remove(), 600);
 }
 
 /* ============================================
@@ -1309,9 +1558,7 @@ function buildRevealScreen() {
     dots.appendChild(d);
   });
 
-  loadRev
-
-   ealStep();
+  loadRevealStep();
 }
 
 function loadRevealStep() {
@@ -1397,128 +1644,134 @@ const NIGHT_STEPS = [
     sub:   'Tout le monde ferme les yeux et baisse la tête.',
   },
   {
+    
+  {
     key:   'mafia',
     icon:  '🔫',
     title: 'La Mafia se réveille',
     sub:   'Les membres de la Mafia ouvrent les yeux et se désignent silencieusement une victime.',
   },
   {
-    key:   'mafiasleep',
-    icon:  '🌑',
-    title: 'La Mafia se rendort',
-    sub:   'Les membres de la Mafia referment les yeux.',
-  },
-  {
-    key:   'under',
-    icon:  '🕵️',
-    title: 'L\'Infiltré se réveille',
-    sub:   'L\'Infiltré ouvre les yeux. La Mafia lève la main discrètement pour se faire connaître.',
-    condition: () => G.hasUndercover && G.players.some(p => p.alive && p.role === 'under'),
-  },
-  {
-    key:   'undersleep',
-    icon:  '🌑',
-    title: 'L\'Infiltré se rendort',
-    sub:   'L\'Infiltré referme les yeux.',
-    condition: () => G.hasUndercover && G.players.some(p => p.alive && p.role === 'under'),
-  },
-  {
     key:   'doctor',
     icon:  '💊',
     title: 'Le Médecin se réveille',
-    sub:   'Le Médecin ouvre les yeux et pointe discrètement le joueur qu\'il souhaite protéger cette nuit.',
-    condition: () => G.hasDoctor && G.players.some(p => p.alive && p.role === 'doctor'),
+    sub:   'Le Médecin ouvre les yeux et désigne silencieusement un joueur à protéger.',
   },
   {
-    key:   'doctorsleep',
+    key:   'sleep2',
     icon:  '🌑',
-    title: 'Le Médecin se rendort',
-    sub:   'Le Médecin referme les yeux.',
-    condition: () => G.hasDoctor && G.players.some(p => p.alive && p.role === 'doctor'),
+    title: 'Tout le monde dort…',
+    sub:   'La Mafia et le Médecin referment les yeux.',
   },
   {
     key:   'wake',
-    icon:  '🌅',
+    icon:  '☀️',
     title: 'L\'aube se lève',
-    sub:   'Tout le monde ouvre les yeux. La ville découvre ce qui s\'est passé cette nuit…',
+    sub:   'Tout le monde ouvre les yeux. Le jour commence.',
   },
 ];
 
 function buildNightScreen() {
   G.nightStep = 0;
-  G.doctorSave = null;
   document.getElementById('nightRoundBadge').textContent = `MANCHE ${G.round}`;
-  document.getElementById('nightProgressBar').style.transition = 'none';
-  document.getElementById('nightProgressBar').style.width = '0%';
   document.getElementById('nightBtn').classList.remove('show');
   loadNightStep();
 }
 
-function getActiveNightSteps() {
-  return NIGHT_STEPS.filter(s => !s.condition || s.condition());
-}
-
 function loadNightStep() {
-  const steps = getActiveNightSteps();
-  if (G.nightStep >= steps.length) {
-    // Nuit terminée → jour
-    goToDay();
-    return;
-  }
+  const steps = nightStepsFiltered();
+  const step  = steps[G.nightStep];
 
-  const st = steps[G.nightStep];
-  const progress = ((G.nightStep) / steps.length) * 100;
+  document.getElementById('nightIcon').textContent      = step.icon;
+  document.getElementById('nightStepTitle').textContent = step.title;
+  document.getElementById('nightStepSub').textContent   = step.sub;
 
-  document.getElementById('nightIcon').textContent      = st.icon;
-  document.getElementById('nightStepTitle').textContent = st.title;
-  document.getElementById('nightStepSub').textContent   = st.sub;
+  const pct = ((G.nightStep + 1) / steps.length) * 100;
+  document.getElementById('nightProgressBar').style.width = pct + '%';
 
-  requestAnimationFrame(() => {
-    document.getElementById('nightProgressBar').style.transition = 'width .6s ease';
-    document.getElementById('nightProgressBar').style.width = progress + '%';
-  });
-
+  document.getElementById('nightBtn').classList.remove('show');
   setTimeout(() => {
     document.getElementById('nightBtn').classList.add('show');
-  }, 800);
+  }, 1200);
+
+  const isLast = G.nightStep === steps.length - 1;
+  document.getElementById('nightBtn').textContent =
+    isLast ? '☀️ COMMENCER LE DÉBAT →' : 'CONTINUER →';
+}
+
+function nightStepsFiltered() {
+  return NIGHT_STEPS.filter(s => {
+    if (s.key === 'doctor') return G.hasDoctor &&
+      G.players.some(p => p.alive && p.role === 'doctor');
+    return true;
+  });
 }
 
 function nightBtnClick() {
   haptic([8]);
-  document.getElementById('nightBtn').classList.remove('show');
-  G.nightStep++;
-  loadNightStep();
+  const steps = nightStepsFiltered();
+  if (G.nightStep < steps.length - 1) {
+    G.nightStep++;
+    loadNightStep();
+  } else {
+    applyNightElim();
+    buildDayScreen();
+    showScreen('screen-day');
+    startChrono();
+    requestWakeLock();
+    saveGame();
+  }
+}
+
+function applyNightElim() {
+  const mafiaAlive = G.players.filter(p =>
+    p.alive && (p.role === 'mafia' || p.role === 'under')
+  );
+  if (mafiaAlive.length === 0) return;
+
+  const victims = G.players.filter(p =>
+    p.alive && p.role !== 'mafia' && p.role !== 'under'
+  );
+  if (victims.length === 0) return;
+
+  const target = victims[Math.floor(Math.random() * victims.length)];
+
+  if (G.doctorSave === target.name) {
+    showToast(`💊 ${target.name} a été sauvé par le Médecin !`);
+    G.doctorSave = null;
+    return;
+  }
+
+  target.alive = false;
+  G.totalElim++;
+  showToast(`💀 ${target.name} a été éliminé cette nuit.`);
+  G.doctorSave = null;
 }
 
 /* ============================================
    ÉCRAN JOUR
 ============================================ */
-function goToDay() {
-  G.voteOpen    = false;
-  G.votes       = {};
-  G.votersDone  = new Set();
-  G.voteTarget  = null;
-  G.chronoLeft  = G.chronoMax;
-
-  buildDayScreen();
-  showScreen('screen-day');
-  requestWakeLock();
-  startChrono();
-  saveGame();
-}
-
 function buildDayScreen() {
   document.getElementById('dayRound').textContent = `MANCHE ${G.round}`;
 
-  // Reset vote UI
+  G.votes      = {};
+  G.votersDone = new Set();
+  G.voteOpen   = false;
+  G.voteTarget = null;
+
   document.getElementById('voteBanner').classList.remove('show');
   document.getElementById('voteSummary').classList.remove('show');
+  document.getElementById('btnVoteOpen').style.display    = '';
   document.getElementById('btnVoteConfirm').style.display = 'none';
   document.getElementById('btnNextNight').classList.remove('show');
-  document.getElementById('btnVoteOpen').textContent = '🗳️ LANCER LE VOTE';
 
-  updateChronoDisplay();
+  G.chronoLeft    = G.chronoMax;
+  G.chronoRunning = false;
+  updateChronoUI();
+  document.getElementById('btnChronoToggle').textContent = '▶ START';
+
   renderPlayersGrid();
+  checkWinCondition();
 }
 
 function renderPlayersGrid() {
@@ -1529,31 +1782,27 @@ function renderPlayersGrid() {
     const card = document.createElement('div');
     card.className = 'player-card' +
       (p.alive ? '' : ' eliminated') +
-      (G.voteOpen && G.voteTarget === p.name ? ' targeted' : '');
+      (G.voteOpen && G.votes[p.name] ? ' targeted' : '');
     card.id = `pc-${i}`;
 
+    if (p.alive && G.voteOpen) {
+      card.onclick = (e) => { addRipple(e, card); castVote(i); };
+    }
+
     const voteCount = G.votes[p.name] || 0;
-    const maxVotes  = Math.max(1, ...Object.values(G.votes));
-    const barPct    = G.voteOpen ? Math.round((voteCount / maxVotes) * 100) : 0;
-    const isDanger  = voteCount === maxVotes && voteCount > 0;
+    const maxVotes  = Math.max(1, ...Object.values(G.votes).map(Number));
+    const barPct    = voteCount > 0 ? (voteCount / maxVotes) * 100 : 0;
+    const isDanger  = G.voteOpen && voteCount === maxVotes && voteCount > 0;
 
     card.innerHTML = `
       <div class="pc-elim-badge">💀</div>
       <div class="pc-name">${p.name}</div>
-      <div class="pc-votes">${G.voteOpen && voteCount > 0 ? voteCount + ' vote' + (voteCount > 1 ? 's' : '') : '&nbsp;'}</div>
+      <div class="pc-votes">${voteCount > 0 ? '🗳 ' + voteCount : ''}</div>
       <div class="vote-bar-wrap">
-        <div class="vote-bar${isDanger ? ' danger' : ''}" style="width:${barPct}%"></div>
+        <div class="vote-bar ${isDanger ? 'danger' : ''}"
+          style="width:${barPct}%"></div>
       </div>
     `;
-
-    if (G.voteOpen && p.alive) {
-      card.style.cursor = 'pointer';
-      card.addEventListener('click', (e) => {
-        addRipple(e, card);
-        castVote(p.name);
-      });
-    }
-
     grid.appendChild(card);
   });
 }
@@ -1562,270 +1811,262 @@ function renderPlayersGrid() {
    CHRONO
 ============================================ */
 function startChrono() {
-  clearInterval(G.chronoTimer);
+  if (G.chronoTimer) clearInterval(G.chronoTimer);
   G.chronoRunning = true;
   document.getElementById('btnChronoToggle').textContent = '⏸ PAUSE';
   G.chronoTimer = setInterval(() => {
     if (!G.chronoRunning) return;
     G.chronoLeft--;
-    updateChronoDisplay();
+    updateChronoUI();
     if (G.chronoLeft <= 0) {
       clearInterval(G.chronoTimer);
+      G.chronoTimer   = null;
       G.chronoRunning = false;
-      haptic([50, 30, 50, 30, 100]);
+      haptic([30, 20, 30, 20, 80]);
       showToast('⏰ Temps écoulé ! Passez au vote.');
+      document.getElementById('btnChronoToggle').textContent = '▶ START';
     }
   }, 1000);
 }
 
 function toggleChrono() {
-  G.chronoRunning = !G.chronoRunning;
-  document.getElementById('btnChronoToggle').textContent =
-    G.chronoRunning ? '⏸ PAUSE' : '▶ REPRENDRE';
-  haptic([8]);
+  if (G.chronoLeft <= 0) {
+    G.chronoLeft    = G.chronoMax;
+    G.chronoRunning = false;
+    updateChronoUI();
+    document.getElementById('btnChronoToggle').textContent = '▶ START';
+    return;
+  }
+  if (G.chronoRunning) {
+    G.chronoRunning = false;
+    clearInterval(G.chronoTimer);
+    G.chronoTimer = null;
+    document.getElementById('btnChronoToggle').textContent = '▶ REPRENDRE';
+    haptic([10]);
+  } else {
+    startChrono();
+    haptic([10]);
+  }
 }
 
 function addMinute() {
-  G.chronoLeft  += 60;
-  G.chronoMax   = Math.max(G.chronoMax, G.chronoLeft);
-  updateChronoDisplay();
-  showToast('+1 minute ajoutée');
-  haptic([10]);
+  G.chronoLeft = Math.min(G.chronoLeft + 60, G.chronoMax * 3);
+  updateChronoUI();
+  haptic([8]);
+  if (!G.chronoRunning && G.chronoLeft > 0) startChrono();
 }
 
-function updateChronoDisplay() {
+function updateChronoUI() {
   const m   = Math.floor(G.chronoLeft / 60);
   const s   = G.chronoLeft % 60;
   document.getElementById('chronoTime').textContent =
-    `${m}:${String(s).padStart(2,'0')}`;
+    m + ':' + String(s).padStart(2, '0');
 
-  const pct    = G.chronoLeft / G.chronoMax;
-  const total  = 339.3;
-  const offset = total * (1 - pct);
-  const fill   = document.getElementById('chronoFill');
-  fill.style.strokeDashoffset = offset;
-  fill.style.stroke =
-    pct > .5 ? 'var(--or)' :
-    pct > .2 ? '#e67e22'   : 'var(--rouge-vif)';
+  const fill    = document.getElementById('chronoFill');
+  const pct     = G.chronoLeft / G.chronoMax;
+  const circ    = 2 * Math.PI * 54;
+  fill.style.strokeDashoffset = circ * (1 - pct);
+  fill.style.stroke = pct > .5 ? 'var(--or)' :
+                      pct > .25 ? '#e67e22' : 'var(--rouge-vif)';
 }
 
 /* ============================================
    VOTE
 ============================================ */
 function openVote() {
-  if (G.voteOpen) { closeVote(); return; }
-
-  G.voteOpen   = true;
-  G.votes      = {};
+  G.voteOpen  = true;
+  G.votes     = {};
   G.votersDone = new Set();
   G.voteTarget = null;
 
-  G.players.filter(p => p.alive).forEach(p => { G.votes[p.name] = 0; });
-
   document.getElementById('voteBanner').classList.add('show');
+  document.getElementById('btnVoteOpen').style.display = 'none';
   document.getElementById('voteSummary').classList.remove('show');
-  document.getElementById('btnVoteOpen').textContent = '✕ ANNULER LE VOTE';
   document.getElementById('btnVoteConfirm').style.display = 'none';
-  document.getElementById('btnNextNight').classList.remove('show');
 
   renderPlayersGrid();
   haptic([10, 5, 10]);
-  showToast('Vote ouvert ! Chaque joueur vote à son tour.');
+  showToast('Vote ouvert ! Appuyez sur un joueur pour voter.');
 }
 
-function closeVote() {
-  G.voteOpen = false;
-  document.getElementById('voteBanner').classList.remove('show');
-  document.getElementById('btnVoteOpen').textContent = '🗳️ LANCER LE VOTE';
-  document.getElementById('btnVoteConfirm').style.display = 'none';
-  renderPlayersGrid();
-}
-
-function castVote(targetName) {
+function castVote(targetIdx) {
   if (!G.voteOpen) return;
 
-  G.votes[targetName] = (G.votes[targetName] || 0) + 1;
+  const alivePlayers = G.players.filter(p => p.alive).length;
+  if (G.votersDone.size >= alivePlayers) {
+    showToast('Tous les joueurs ont voté !');
+    return;
+  }
+
+  const target = G.players[targetIdx];
+  if (!target.alive) return;
+
+  G.votes[target.name] = (G.votes[target.name] || 0) + 1;
+  G.votersDone.add(G.votersDone.size);
   G.totalVotes++;
+
   haptic([15]);
-
-  // Trouver le max
-  const maxVotes = Math.max(...Object.values(G.votes));
-  const leaders  = Object.keys(G.votes).filter(k => G.votes[k] === maxVotes);
-  G.voteTarget   = leaders.length === 1 ? leaders[0] : null;
-
   renderPlayersGrid();
-  renderVoteSummary();
+  updateVoteSummary();
 
-  // Afficher bouton éliminer si un leader clair
-  if (G.voteTarget) {
-    document.getElementById('btnVoteConfirm').style.display = 'block';
-  } else {
-    document.getElementById('btnVoteConfirm').style.display = 'none';
+  if (G.votersDone.size >= alivePlayers) {
+    closeVote();
   }
 }
 
-function renderVoteSummary() {
-  const summary = document.getElementById('voteSummary');
-  const rows    = document.getElementById('voteSummaryRows');
-  summary.classList.add('show');
+function updateVoteSummary() {
+  const rows = document.getElementById('voteSummaryRows');
   rows.innerHTML = '';
-
-  const maxV = Math.max(1, ...Object.values(G.votes));
   const sorted = Object.entries(G.votes).sort((a, b) => b[1] - a[1]);
+  const max    = sorted[0]?.[1] || 1;
 
   sorted.forEach(([name, count]) => {
-    if (count === 0) return;
-    const pct = Math.round((count / maxV) * 100);
+    const pct = (count / max) * 100;
     const row = document.createElement('div');
     row.className = 'vs-row';
     row.innerHTML = `
       <span class="vs-name">${name}</span>
       <div class="vs-bar-wrap">
         <div class="vs-bar" style="width:${pct}%;background:${
-          count === maxV ? 'var(--rouge-vif)' : 'var(--or)'
-        }"></div>
+          count === max ? 'var(--rouge-vif)' : 'var(--or)'}">
+        </div>
       </div>
       <span class="vs-count">${count}</span>
     `;
     rows.appendChild(row);
   });
+
+  document.getElementById('voteSummary').classList.add('show');
+}
+
+function closeVote() {
+  G.voteOpen = false;
+  document.getElementById('voteBanner').classList.remove('show');
+
+  const sorted = Object.entries(G.votes).sort((a, b) => b[1] - a[1]);
+  if (sorted.length === 0) return;
+
+  const maxVotes  = sorted[0][1];
+  const topVoted  = sorted.filter(e => e[1] === maxVotes);
+
+  if (topVoted.length === 1) {
+    G.voteTarget = topVoted[0][0];
+    document.getElementById('btnVoteConfirm').style.display = '';
+    document.getElementById('btnVoteConfirm').textContent =
+      `💀 ÉLIMINER ${G.voteTarget.toUpperCase()}`;
+    haptic([20, 10, 20]);
+  } else {
+    showToast('⚖️ Égalité ! Pas d\'élimination par vote.');
+    G.voteTarget = null;
+    document.getElementById('btnNextNight').classList.add('show');
+  }
 }
 
 function confirmVoteElim() {
-  if (!G.voteTarget) { showToast('Aucun joueur désigné clairement.'); return; }
+  if (!G.voteTarget) return;
+  const p = G.players.find(x => x.name === G.voteTarget);
+  if (!p) return;
   openModal(
-    `ÉLIMINER ${G.voteTarget.toUpperCase()} ?`,
-    `Le vote désigne ${G.voteTarget}. Confirmez-vous son élimination ?`,
+    'ÉLIMINER ?',
+    `Confirmer l\'élimination de ${p.name} ?`,
     () => {
-      eliminatePlayer(G.voteTarget);
-      closeVote();
+      p.alive = false;
+      G.totalElim++;
+      showToast(`💀 ${p.name} a été éliminé.`);
+      document.getElementById('btnVoteConfirm').style.display = 'none';
+      renderPlayersGrid();
+      saveGame();
+      if (!checkWinCondition()) {
+        document.getElementById('btnNextNight').classList.add('show');
+      }
+      haptic([30, 20, 80]);
     }
   );
 }
 
-/* ============================================
-   ÉLIMINATION DIRECTE
-============================================ */
 function confirmElim() {
   const alive = G.players.filter(p => p.alive);
   if (alive.length === 0) return;
 
-  let html = '<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">';
-  alive.forEach(p => {
-    html += `<button onclick="selectElimTarget('${p.name}')"
-      style="padding:10px;background:rgba(139,0,0,.15);border:1px solid rgba(192,57,43,.4);
-      border-radius:3px;color:var(--texte);font-family:var(--font-mono);
-      font-size:12px;letter-spacing:2px;cursor:pointer;">
-      ${p.name}
-    </button>`;
-  });
-  html += '</div>';
-
-  document.getElementById('modalTitle').textContent = 'CHOISIR UN JOUEUR';
-  document.getElementById('modalBody').innerHTML = html;
-  document.getElementById('modalYes').style.display  = 'none';
-  document.getElementById('modalNo').textContent = 'ANNULER';
-  document.getElementById('modalOverlay').classList.add('show');
-  document.getElementById('modalNo').onclick = closeModal;
-}
-
-function selectElimTarget(name) {
-  closeModal();
   openModal(
-    `ÉLIMINER ${name.toUpperCase()} ?`,
-    `Êtes-vous sûr de vouloir éliminer ${name} de la partie ?`,
-    () => eliminatePlayer(name)
+    'ÉLIMINATION DIRECTE',
+    'Quel joueur est éliminé ?\n\n' +
+    alive.map((p, i) => `${i+1}. ${p.name}`).join('\n'),
+    () => {
+      const name = prompt('Nom du joueur éliminé :');
+      if (!name) return;
+      const p = G.players.find(x =>
+        x.name.toLowerCase() === name.toLowerCase() && x.alive
+      );
+      if (!p) { showToast('Joueur introuvable.'); return; }
+      p.alive = false;
+      G.totalElim++;
+      showToast(`💀 ${p.name} éliminé.`);
+      renderPlayersGrid();
+      saveGame();
+      if (!checkWinCondition()) {
+        document.getElementById('btnNextNight').classList.add('show');
+      }
+      haptic([30, 20, 80]);
+    }
   );
-}
-
-function eliminatePlayer(name) {
-  const p = G.players.find(x => x.name === name);
-  if (!p || !p.alive) return;
-  p.alive = false;
-  G.totalElim++;
-  haptic([30, 15, 50]);
-  showToast(`💀 ${name} a été éliminé(e)`);
-  renderPlayersGrid();
-  checkWinCondition();
-  saveGame();
 }
 
 /* ============================================
    CONDITION DE VICTOIRE
 ============================================ */
 function checkWinCondition() {
-  const aliveMafia  = G.players.filter(p => p.alive && p.role === 'mafia').length;
-  const aliveOthers = G.players.filter(p => p.alive && p.role !== 'mafia').length;
+  const alivePolice = G.players.filter(p =>
+    p.alive && (p.role === 'police' || p.role === 'doctor')
+  ).length;
+  const aliveMafia = G.players.filter(p =>
+    p.alive && (p.role === 'mafia' || p.role === 'under')
+  ).length;
 
   if (aliveMafia === 0) {
-    setTimeout(() => showEndScreen('police'), 800);
-    return;
+    endGame('police');
+    return true;
   }
-  if (aliveMafia >= aliveOthers) {
-    setTimeout(() => showEndScreen('mafia'), 800);
-    return;
+  if (aliveMafia >= alivePolice) {
+    endGame('mafia');
+    return true;
   }
-
-  // Afficher bouton nuit suivante
-  document.getElementById('btnNextNight').classList.add('show');
+  return false;
 }
 
-/* ============================================
-   PASSER À LA NUIT / AU JOUR
-============================================ */
 function skipToNight() {
-  haptic([8]);
-  goToNight();
-}
-
-function goToNight() {
   clearInterval(G.chronoTimer);
-  releaseWakeLock();
+  G.chronoTimer   = null;
+  G.chronoRunning = false;
   G.round++;
-  G.chronoLeft = G.chronoMax;
   buildNightScreen();
   showScreen('screen-night');
-  saveGame();
+  haptic([10, 5, 10]);
 }
 
 /* ============================================
-   MODAL GÉNÉRIQUE
+   FIN DE PARTIE
 ============================================ */
-function openModal(title, body, onConfirm) {
-  document.getElementById('modalTitle').textContent  = title;
-  document.getElementById('modalBody').innerHTML     = body;
-  document.getElementById('modalYes').style.display  = 'block';
-  document.getElementById('modalYes').textContent    = 'CONFIRMER';
-  document.getElementById('modalNo').textContent     = 'ANNULER';
-  document.getElementById('modalYes').onclick = () => { closeModal(); onConfirm(); };
-  document.getElementById('modalNo').onclick  = closeModal;
-  document.getElementById('modalOverlay').classList.add('show');
-}
-
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('show');
-}
-
-/* ============================================
-   ÉCRAN FIN
-============================================ */
-function showEndScreen(winner) {
+function endGame(winner) {
   clearInterval(G.chronoTimer);
+  G.chronoTimer   = null;
+  G.chronoRunning = false;
   releaseWakeLock();
   clearSavedGame();
   saveHistory(winner);
 
   const isPolice = winner === 'police';
-  document.getElementById('endTrophy').textContent  = isPolice ? '🏆' : '💀';
-  document.getElementById('endResult').textContent  = isPolice ? 'VICTOIRE' : 'DÉFAITE';
-  document.getElementById('endSub').textContent     = isPolice ? 'LA POLICE A TRIOMPHÉ' : 'LA MAFIA A GAGNÉ';
-  document.getElementById('endResult').style.color  = isPolice ? 'var(--or-clair)' : 'var(--rouge-vif)';
+  document.getElementById('endTrophy').textContent = isPolice ? '🚔' : '🔫';
+  document.getElementById('endResult').textContent = isPolice ? 'VICTOIRE' : 'DÉFAITE';
+  document.getElementById('endResult').style.color = isPolice ? 'var(--or)' : 'var(--rouge-vif)';
+  document.getElementById('endSub').textContent    = isPolice
+    ? 'LA POLICE A TRIOMPHÉ' : 'LA MAFIA A GAGNÉ';
 
   const survivors = G.players.filter(p => p.alive).length;
-  document.getElementById('statRounds').textContent = G.round;
-  document.getElementById('statElim').textContent   = G.totalElim;
-  document.getElementById('statVotes').textContent  = G.totalVotes;
-  document.getElementById('statSurv').textContent   = survivors;
+  document.getElementById('statRounds').textContent  = G.round;
+  document.getElementById('statElim').textContent    = G.totalElim;
+  document.getElementById('statVotes').textContent   = G.totalVotes;
+  document.getElementById('statSurv').textContent    = survivors;
 
   const list = document.getElementById('endPlayersList');
   list.innerHTML = '';
@@ -1848,6 +2089,25 @@ function showEndScreen(winner) {
   renderHistory();
   showScreen('screen-end');
   haptic([30, 20, 30, 20, 80]);
+}
+
+/* ============================================
+   MODAL
+============================================ */
+function openModal(title, body, onYes) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').textContent  = body;
+  document.getElementById('modalOverlay').classList.add('show');
+
+  document.getElementById('modalYes').onclick = () => {
+    closeModal();
+    onYes();
+  };
+  document.getElementById('modalNo').onclick = closeModal;
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
 }
 
 /* ============================================
