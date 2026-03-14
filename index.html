@@ -293,27 +293,27 @@ input[type="text"]::placeholder { color:rgba(212,201,168,0.25); }
 #screen-night::after { content:''; position:fixed; inset:0; background:rgba(0,0,0,0.6); pointer-events:none; }
 .night-inner { position:relative; z-index:1; width:100%; text-align:center; padding:0 28px; max-width:400px; }
 .night-title { font-family:'Playfair Display',serif; font-size:32px; color:var(--or); letter-spacing:3px; text-shadow:0 0 20px rgba(201,168,76,0.35); }
-.night-sub { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:5px; color:rgba(138,0,200,0.75); text-transform:uppercase; margin-bottom:28px; margin-top:2px; }
+.night-sub { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:5px; color:rgba(200,0,0,0.7); text-transform:uppercase; margin-bottom:28px; margin-top:2px; }
 
 .orb { width:140px; height:140px; margin:0 auto 24px; position:relative; display:flex; align-items:center; justify-content:center; }
-.orb-ring { position:absolute; border-radius:50%; border:1px solid rgba(138,0,200,0.35); animation:orbRing 2s ease-out infinite; opacity:0; }
+.orb-ring { position:absolute; border-radius:50%; border:1px solid rgba(180,0,0,0.4); animation:orbRing 2s ease-out infinite; opacity:0; }
 .orb-ring:nth-child(1){width:88px;height:88px;animation-delay:0s}
 .orb-ring:nth-child(2){width:114px;height:114px;animation-delay:0.65s}
 .orb-ring:nth-child(3){width:140px;height:140px;animation-delay:1.3s}
-@keyframes orbRing { 0%{opacity:0.6;transform:scale(0.8)} 100%{opacity:0;transform:scale(1.1)} }
+@keyframes orbRing { 0%{opacity:0.7;transform:scale(0.8)} 100%{opacity:0;transform:scale(1.1)} }
 .orb-core {
   width:68px; height:68px; border-radius:50%; z-index:3;
-  background:radial-gradient(circle at 35% 35%,#6a0080,#2a003a);
-  box-shadow:0 0 28px rgba(138,0,200,0.55);
+  background:radial-gradient(circle at 35% 35%,#7a0000,#2a0000);
+  box-shadow:0 0 28px rgba(180,0,0,0.6);
   display:flex; align-items:center; justify-content:center; font-size:26px;
 }
 .orb-core.speaking { animation:orbPulse 0.5s ease-in-out infinite alternate; }
-@keyframes orbPulse { from{transform:scale(1);box-shadow:0 0 28px rgba(138,0,200,0.5)} to{transform:scale(1.1);box-shadow:0 0 55px rgba(200,0,255,0.9)} }
+@keyframes orbPulse { from{transform:scale(1);box-shadow:0 0 28px rgba(180,0,0,0.5)} to{transform:scale(1.1);box-shadow:0 0 55px rgba(220,0,0,0.95)} }
 
 .night-text {
   font-family:'Playfair Display',serif; font-size:19px; font-style:italic;
   color:var(--blanc); min-height:72px; line-height:1.5; margin-bottom:20px;
-  text-shadow:0 0 18px rgba(138,0,200,0.4); white-space:pre-line;
+  text-shadow:0 0 18px rgba(180,0,0,0.35); white-space:pre-line;
   transition:opacity 0.5s ease;
 }
 .night-dots { display:flex; gap:6px; justify-content:center; margin-bottom:24px; }
@@ -324,65 +324,91 @@ input[type="text"]::placeholder { color:rgba(212,201,168,0.25); }
 
 .btn-night {
   display:none; width:100%; max-width:280px; margin:0 auto; padding:16px;
-  background:rgba(138,0,200,0.3); border:1px solid rgba(138,0,200,0.55); color:var(--blanc);
+  background:rgba(139,0,0,0.35); border:1px solid rgba(180,0,0,0.6); color:var(--or-clair);
   font-family:'Oswald',sans-serif; font-size:14px; letter-spacing:3px; text-transform:uppercase;
   cursor:pointer; clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
 }
 .btn-night:active { opacity:0.8; }
 
 /* ── DAY ── */
-#screen-day { justify-content:flex-start; padding:0; }
-.day-hd {
-  width:100%; padding:calc(44px + var(--safe-top)) 24px 16px;
-  background:linear-gradient(180deg,rgba(100,40,0,0.65) 0%,transparent 100%);
-  text-align:center; flex-shrink:0;
-}
-.sun { font-size:34px; display:block; margin-bottom:6px; animation:sunSpin 20s linear infinite; filter:drop-shadow(0 0 14px rgba(255,180,0,0.7)); }
-@keyframes sunSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-.day-title { font-family:'Playfair Display',serif; font-size:28px; color:#ffaa44; letter-spacing:3px; text-shadow:0 0 28px rgba(255,140,0,0.5); }
-.manche-lbl { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:4px; color:rgba(212,201,168,0.35); text-transform:uppercase; margin-top:3px; }
+#screen-day { justify-content:flex-start; padding:0; background:url('bg-main.png') center/cover no-repeat; }
+#screen-day::after { content:''; position:fixed; inset:0; background:rgba(0,0,0,0.72); pointer-events:none; z-index:0; }
+#screen-day > * { position:relative; z-index:1; }
 
-.timer-zone { width:100%; padding:14px 24px 4px; text-align:center; flex-shrink:0; }
-.timer-num {
-  font-family:'Oswald',sans-serif; font-size:76px; font-weight:600; letter-spacing:4px;
-  color:var(--or); line-height:1; text-shadow:0 0 28px rgba(201,168,76,0.35);
-  transition:color 0.3s;
+.day-hd {
+  width:100%; padding:calc(36px + var(--safe-top)) 24px 14px;
+  text-align:center; flex-shrink:0;
+  border-bottom:1px solid rgba(201,168,76,0.15);
+  background:linear-gradient(180deg,rgba(80,20,0,0.8) 0%,rgba(0,0,0,0.3) 100%);
 }
+.sun { font-size:30px; display:block; margin-bottom:4px; animation:sunSpin 20s linear infinite; filter:drop-shadow(0 0 12px rgba(255,180,0,0.8)); }
+@keyframes sunSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+.day-title { font-family:'Playfair Display',serif; font-size:26px; color:#ffb347; letter-spacing:4px; text-shadow:0 0 24px rgba(255,140,0,0.55); }
+.manche-lbl { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:5px; color:rgba(212,201,168,0.35); text-transform:uppercase; margin-top:3px; }
+
+/* timer block */
+.timer-zone {
+  width:100%; padding:18px 24px 14px; text-align:center; flex-shrink:0;
+  background:rgba(0,0,0,0.25);
+}
+.timer-ring-wrap {
+  position:relative; width:160px; height:160px; margin:0 auto 10px;
+}
+.timer-ring-wrap svg { position:absolute; inset:0; transform:rotate(-90deg); }
+.timer-ring-bg { fill:none; stroke:rgba(201,168,76,0.12); stroke-width:4; }
+.timer-ring-fg { fill:none; stroke:var(--or); stroke-width:4; stroke-linecap:round; transition:stroke-dashoffset 1s linear, stroke 0.3s; }
+.timer-ring-fg.urgent { stroke:var(--rouge-vif); }
+.timer-inner { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.timer-num { font-family:'Oswald',sans-serif; font-size:52px; font-weight:600; letter-spacing:2px; color:var(--or); line-height:1; transition:color 0.3s; }
 .timer-num.urgent { color:var(--rouge-vif); animation:urgentPulse 0.5s ease-in-out infinite; }
-@keyframes urgentPulse { 0%,100%{text-shadow:0 0 18px rgba(204,0,0,0.35)} 50%{text-shadow:0 0 38px rgba(204,0,0,0.85)} }
-.timer-lbl { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:5px; color:rgba(212,201,168,0.35); text-transform:uppercase; }
-.timer-ctrl { display:flex; gap:10px; justify-content:center; margin-top:10px; }
+@keyframes urgentPulse { 0%,100%{text-shadow:0 0 16px rgba(204,0,0,0.3)} 50%{text-shadow:0 0 34px rgba(204,0,0,0.8)} }
+.timer-lbl { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:4px; color:rgba(212,201,168,0.3); text-transform:uppercase; margin-top:2px; }
+
+.timer-ctrl { display:flex; gap:10px; justify-content:center; margin-top:12px; }
 .btn-tc {
   padding:9px 18px; font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:2px; text-transform:uppercase;
   cursor:pointer; border:1px solid; background:transparent;
   clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);
 }
-.btn-tc.p { border-color:var(--or); color:var(--or); }
-.btn-tc.a { border-color:rgba(212,201,168,0.3); color:var(--texte); }
-.btn-tc:active { opacity:0.65; }
+.btn-tc.p { border-color:rgba(201,168,76,0.5); color:var(--or); }
+.btn-tc.a { border-color:rgba(212,201,168,0.25); color:rgba(212,201,168,0.6); }
+.btn-tc:active { opacity:0.6; }
 
-.day-hr { width:calc(100% - 48px); margin:10px 24px; height:1px; background:linear-gradient(90deg,transparent,rgba(201,168,76,0.25),transparent); flex-shrink:0; }
+.day-hr { width:calc(100% - 40px); margin:0 20px; height:1px; background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent); flex-shrink:0; }
 
-.suspects-zone { width:100%; padding:0 20px calc(90px + var(--safe-bot)); flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
-.suspects-hd { display:flex; align-items:center; justify-content:space-between; padding-bottom:8px; margin-bottom:10px; border-bottom:1px solid rgba(201,168,76,0.18); }
-.suspects-lbl { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:4px; color:rgba(212,201,168,0.35); text-transform:uppercase; }
-.vote-hint-lbl { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:rgba(201,168,76,0.45); text-transform:uppercase; }
+.suspects-zone { width:100%; padding:14px 20px calc(88px + var(--safe-bot)); flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+.suspects-hd { display:flex; align-items:center; justify-content:space-between; padding-bottom:8px; margin-bottom:12px; border-bottom:1px solid rgba(201,168,76,0.15); }
+.suspects-lbl { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:4px; color:rgba(212,201,168,0.32); text-transform:uppercase; }
+.vote-hint-lbl { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:rgba(201,168,76,0.4); text-transform:uppercase; }
 
 .suspect-row {
   display:flex; align-items:center; gap:13px; padding:13px 15px; margin-bottom:8px;
-  background:rgba(255,255,255,0.025); border:1px solid rgba(201,168,76,0.13);
-  border-left:3px solid rgba(201,168,76,0.32);
-  transition:all 0.25s; cursor:pointer; position:relative; overflow:hidden;
+  background:rgba(0,0,0,0.4); border:1px solid rgba(201,168,76,0.1);
+  border-left:3px solid rgba(201,168,76,0.3);
+  transition:all 0.2s; cursor:pointer; position:relative; overflow:hidden;
+  backdrop-filter:blur(4px);
 }
-.suspect-row:active { background:rgba(201,168,76,0.05); transform:scale(0.985); }
-.suspect-row.elim { opacity:0.3; border-left-color:rgba(139,0,0,0.4); cursor:default; pointer-events:none; }
-.suspect-row.elim::after { content:''; position:absolute; top:50%; left:0; right:0; height:1px; background:rgba(204,0,0,0.45); }
-.s-avatar { width:40px; height:40px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:17px; font-weight:600; color:var(--or); background:linear-gradient(135deg,var(--rouge),#3a0000); border:1px solid rgba(201,168,76,0.28); }
-.s-name { flex:1; font-size:17px; color:var(--texte); }
-.s-icon { font-size:18px; opacity:0.25; transition:opacity 0.2s; }
+.suspect-row:active { background:rgba(201,168,76,0.06); transform:scale(0.985); border-left-color:var(--or); }
+.suspect-row.elim { opacity:0.28; border-left-color:rgba(139,0,0,0.35); cursor:default; pointer-events:none; }
+.suspect-row.elim::after { content:''; position:absolute; top:50%; left:0; right:0; height:1px; background:rgba(200,0,0,0.4); }
+.s-avatar { width:40px; height:40px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:17px; font-weight:600; color:var(--or); background:linear-gradient(135deg,#5a0000,#1a0000); border:1px solid rgba(201,168,76,0.25); }
+.s-name { flex:1; font-size:17px; color:var(--texte); font-family:'Special Elite',cursive; }
+.s-icon { font-size:18px; opacity:0.22; transition:opacity 0.2s; }
 .s-elim { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:rgba(204,0,0,0.5); text-transform:uppercase; }
 
-.day-bot { position:fixed; bottom:0; left:0; right:0; padding:12px 20px calc(12px + var(--safe-bot)); background:linear-gradient(transparent,rgba(0,0,0,0.95) 40%); z-index:10; }
+/* winner banner on day screen */
+.winner-banner {
+  width:calc(100% - 40px); margin:0 20px 12px; padding:14px 18px;
+  border:1px solid; text-align:center; animation:fadeInUp 0.5s ease;
+}
+.winner-banner.mafia { border-color:var(--rouge-vif); background:rgba(139,0,0,0.25); }
+.winner-banner.police { border-color:#4a9eff; background:rgba(26,74,138,0.2); }
+.winner-banner h3 { font-family:'Playfair Display',serif; font-size:20px; margin-bottom:4px; }
+.winner-banner.mafia h3 { color:var(--rouge-vif); }
+.winner-banner.police h3 { color:#4a9eff; }
+.winner-banner p { font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:2px; color:rgba(212,201,168,0.65); text-transform:uppercase; }
+
+.day-bot { position:fixed; bottom:0; left:0; right:0; padding:12px 20px calc(12px + var(--safe-bot)); background:linear-gradient(transparent,rgba(0,0,0,0.97) 40%); z-index:10; }
 
 /* ── VOTE OVERLAY ── */
 #vote-overlay {
@@ -419,6 +445,7 @@ input[type="text"]::placeholder { color:rgba(212,201,168,0.25); }
 ::-webkit-scrollbar { width:3px; }
 ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:var(--rouge); }
+@keyframes fadeInUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
 </style>
 </head>
 <body>
@@ -556,18 +583,27 @@ input[type="text"]::placeholder { color:rgba(212,201,168,0.25); }
     <div class="manche-lbl" id="manche-lbl">MANCHE 1</div>
   </div>
   <div class="timer-zone">
-    <div class="timer-num" id="timer">05:00</div>
-    <div class="timer-lbl">Temps restant</div>
+    <div class="timer-ring-wrap">
+      <svg viewBox="0 0 160 160" width="160" height="160">
+        <circle class="timer-ring-bg" cx="80" cy="80" r="70"/>
+        <circle class="timer-ring-fg" id="timer-ring" cx="80" cy="80" r="70" stroke-dasharray="439.8" stroke-dashoffset="0"/>
+      </svg>
+      <div class="timer-inner">
+        <div class="timer-num" id="timer">05:00</div>
+        <div class="timer-lbl">restant</div>
+      </div>
+    </div>
     <div class="timer-ctrl">
       <button class="btn-tc p" id="btn-pause" onclick="togglePause()">⏸ PAUSE</button>
       <button class="btn-tc a" onclick="addMinute()">+1 MIN</button>
     </div>
   </div>
   <div class="day-hr"></div>
+  <div id="winner-zone"></div>
   <div class="suspects-zone">
     <div class="suspects-hd">
       <div class="suspects-lbl">Joueurs</div>
-      <div class="vote-hint-lbl">Tapez pour voter →</div>
+      <div class="vote-hint-lbl" id="vote-hint-day">Tapez pour voter →</div>
     </div>
     <div id="suspects-list"></div>
   </div>
@@ -632,7 +668,7 @@ const S = {
   players: [], roles: [],
   currentReveal: 0, revealed: false,
   nightStep: 0, roundNumber: 1,
-  timerSec: 300, timerRunning: false, timerInterval: null,
+  timerSec: 300, timerTotal: 300, timerRunning: false, timerInterval: null,
   eliminated: new Set(),
   audioOn: true, voAudio: null,
   hasUndercover: false, hasMafia: false,
@@ -752,7 +788,10 @@ function showScreen(name) {
   }
 
   if (name === 'day') {
-    S.timerSec = 300; updateTimer(); updateSuspects(); startTimer();
+    S.timerSec = 300; S.timerTotal = 300;
+    document.getElementById('winner-zone').innerHTML = '';
+    document.getElementById('vote-hint-day').textContent = 'Tapez pour voter →';
+    updateTimer(); updateSuspects(); startTimer();
     document.getElementById('manche-lbl').textContent = `MANCHE ${S.roundNumber}`;
   }
   if (name === 'end') { stopAll(); buildEndScreen(); }
@@ -966,6 +1005,46 @@ function runStep(idx) {
   });
 }
 
+function runStep(idx) {
+  const steps = getNightSteps();
+  if (idx >= steps.length) {
+    // Sequence complete — auto go to day after short pause
+    setTimeout(() => goToDay(), 1200);
+    return;
+  }
+
+  S.nightStep = idx;
+  const step = steps[idx];
+  const isLast = idx === steps.length - 1;
+
+  // Update dots
+  steps.forEach((_,i) => {
+    const d = document.getElementById('nd'+i);
+    if (d) d.className = 'ndot' + (i<idx?' done':i===idx?' active':'');
+  });
+
+  // Fade text
+  const el = document.getElementById('night-text');
+  el.style.opacity = '0';
+  setTimeout(() => { el.textContent = step.text; el.style.opacity = '1'; }, 400);
+
+  // Orb
+  const orb = document.getElementById('orb');
+  orb.classList.add('speaking');
+
+  playVO(step.vo, () => {
+    orb.classList.remove('speaking');
+    if (isLast) {
+      // Show skip button as fallback, auto-advance after 2s
+      const btn = document.getElementById('btn-day');
+      btn.style.display = 'block';
+      setTimeout(() => goToDay(), 2000);
+    } else {
+      setTimeout(() => runStep(idx + 1), 1800);
+    }
+  });
+}
+
 function goToDay() {
   stopVO();
   S.roundNumber++;
@@ -973,8 +1052,11 @@ function goToDay() {
 }
 
 // ════════════════════════════════════
-// TIMER
+// TIMER + RING
 // ════════════════════════════════════
+const TIMER_TOTAL = 300;
+const CIRCUMFERENCE = 2 * Math.PI * 70; // r=70
+
 function startTimer() {
   if (S.timerInterval) clearInterval(S.timerInterval);
   S.timerRunning = true;
@@ -984,7 +1066,7 @@ function startTimer() {
     S.timerSec--;
     updateTimer();
     if (S.timerSec === 60) { playVO('voix-60s'); showToast('⚠️ 1 minute restante !'); }
-    if (S.timerSec <= 0)   { clearInterval(S.timerInterval); S.timerRunning=false; playVO('voix-chrono-fin'); showToast('⏰ TEMPS ÉCOULÉ !'); }
+    if (S.timerSec <= 0)   { clearInterval(S.timerInterval); S.timerRunning=false; playVO('voix-chrono-fin'); showToast('⏰ TEMPS ÉCOULÉ — VOTEZ !'); }
   }, 1000);
 }
 
@@ -992,7 +1074,15 @@ function updateTimer() {
   const m = Math.floor(S.timerSec/60), s = S.timerSec%60;
   const el = document.getElementById('timer');
   el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  el.className = 'timer-num' + (S.timerSec<=30?' urgent':'');
+  const urgent = S.timerSec <= 30;
+  el.className = 'timer-num' + (urgent ? ' urgent' : '');
+  // Ring
+  const ring = document.getElementById('timer-ring');
+  if (ring) {
+    const ratio = Math.max(0, S.timerSec / S.timerTotal);
+    ring.style.strokeDashoffset = CIRCUMFERENCE * (1 - ratio);
+    ring.className = 'timer-ring-fg' + (urgent ? ' urgent' : '');
+  }
 }
 
 function togglePause() {
@@ -1002,7 +1092,43 @@ function togglePause() {
 
 function addMinute() {
   S.timerSec = Math.min(S.timerSec+60, 600);
+  S.timerTotal = Math.max(S.timerTotal || TIMER_TOTAL, S.timerSec);
   updateTimer(); showToast('+1 minute');
+}
+
+// ════════════════════════════════════
+// WIN DETECTION
+// ════════════════════════════════════
+function checkWin() {
+  const activePlayers = S.players.filter((_,i) => !S.eliminated.has(i));
+  const activeMafia   = activePlayers.filter((_,i2) => {
+    const realIdx = S.players.indexOf(_); // may have duplicates; safer:
+    return false; // will redo below
+  });
+  // Count active by role
+  let aliveMafia = 0, alivePolice = 0;
+  S.players.forEach((_, i) => {
+    if (S.eliminated.has(i)) return;
+    if (S.roles[i] === 'mafia') aliveMafia++;
+    else alivePolice++;
+  });
+
+  if (aliveMafia === 0) return 'police';          // all mafia eliminated
+  if (aliveMafia >= alivePolice) return 'mafia';  // mafia = or > police
+  return null;
+}
+
+function showWinnerBanner(winner) {
+  const zone = document.getElementById('winner-zone');
+  if (!zone) return;
+  if (winner === 'police') {
+    zone.innerHTML = `<div class="winner-banner police"><h3>🏆 La Police a gagné !</h3><p>Tous les mafieux ont été démasqués</p></div>`;
+  } else {
+    zone.innerHTML = `<div class="winner-banner mafia"><h3>🔫 La Mafia a gagné !</h3><p>La famiglia contrôle la ville</p></div>`;
+  }
+  document.getElementById('vote-hint-day').textContent = '';
+  // Auto go to end after 4s
+  setTimeout(() => showScreen('end'), 4000);
 }
 
 // ════════════════════════════════════
@@ -1070,12 +1196,29 @@ function confirmVote() {
   const i = S.voteIdx;
   S.eliminated.add(i);
   document.getElementById('vote-overlay').classList.remove('open');
-  showToast(`${S.players[i]} a été éliminé`);
+  const elimName = S.players[i];
   S.voteIdx = null;
   if (S.timerInterval) clearInterval(S.timerInterval);
   S.timerRunning = false;
   updateSuspects();
-  setTimeout(() => showScreen('night'), 1000);
+
+  // Check win condition
+  const winner = checkWin();
+  if (winner) {
+    showToast(`${elimName} éliminé — Partie terminée !`, 3000);
+    setTimeout(() => {
+      showScreen('day'); // show day with winner banner
+      showWinnerBanner(winner);
+    }, 800);
+    return;
+  }
+
+  // No winner yet — go back to debate directly (skip full night)
+  showToast(`${elimName} éliminé — Nouveau débat dans 3s`, 3000);
+  setTimeout(() => {
+    S.roundNumber++;
+    showScreen('day');
+  }, 3000);
 }
 
 function closeVote() {
@@ -1104,7 +1247,7 @@ function buildEndScreen() {
 function resetGame() {
   stopAll();
   S.players=['','','']; S.roles=[]; S.eliminated=new Set();
-  S.roundNumber=1; S.timerSec=300; S.voteIdx=null; S.voteRevealed=false;
+  S.roundNumber=1; S.timerSec=300; S.timerTotal=300; S.voteIdx=null; S.voteRevealed=false;
   if (S.timerInterval) clearInterval(S.timerInterval);
   document.getElementById('vote-overlay').classList.remove('open');
   showScreen('config'); renderPlayers();
