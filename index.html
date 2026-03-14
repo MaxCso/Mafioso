@@ -736,8 +736,17 @@ function warmVoPool() {
   ALL_VO_FILES.forEach(f => {
     const a = new Audio(f + '.mp3');
     a.preload = 'auto';
-    // Silent play+pause to unlock on iOS
-    a.play().then(() => a.pause()).catch(() => {});
+    a.volume = 0;      // silent
+    a.muted  = true;   // doubly silent — iOS still counts this as unlocked
+    a.play().then(() => {
+      a.pause();
+      a.currentTime = 0;
+      a.volume = 1;    // restore volume for real playback later
+      a.muted  = false;
+    }).catch(() => {
+      a.volume = 1;
+      a.muted  = false;
+    });
     voPool[f] = a;
   });
 }
