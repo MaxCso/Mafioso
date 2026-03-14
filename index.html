@@ -358,7 +358,7 @@
   #screen-reveal {
     background: url('bg-main.png') center/cover no-repeat;
     justify-content: flex-start;
-    padding: 0 20px 110px;
+    padding: 0 24px 120px;
     overflow-y: auto;
   }
   #screen-reveal::after {
@@ -374,11 +374,12 @@
     z-index: 1;
     width: 100%;
     text-align: center;
-    padding-top: 24px;
+    padding-top: 20px;
   }
 
   .dossier-card {
-    width: min(320px, 90vw);
+    width: 100%;
+    max-width: 360px;
     margin: 0 auto;
     background: linear-gradient(135deg, #1a1208 0%, #0d0d0d 100%);
     border: 1px solid rgba(201,168,76,0.4);
@@ -513,7 +514,8 @@
   /* Flip card mechanic */
   .flip-zone {
     perspective: 1000px;
-    width: min(320px, 90vw);
+    width: 100%;
+    max-width: 360px;
     margin: 0 auto;
   }
 
@@ -703,22 +705,25 @@
   /* ===== SCREEN 5: JOUR ===== */
   #screen-day {
     justify-content: flex-start;
-    padding-top: 0;
+    padding: 0;
+    overflow-y: auto;
   }
 
   .day-header {
     width: 100%;
-    padding: 40px 20px 20px;
-    background: linear-gradient(180deg, rgba(139,50,0,0.6) 0%, transparent 100%);
+    padding: 50px 24px 20px;
+    background: linear-gradient(180deg, rgba(100,40,0,0.7) 0%, transparent 100%);
     text-align: center;
     position: relative;
+    flex-shrink: 0;
   }
 
   .sun-icon {
-    font-size: 40px;
+    font-size: 36px;
     animation: sunSpin 20s linear infinite;
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
+    filter: drop-shadow(0 0 16px rgba(255,180,0,0.8));
   }
 
   @keyframes sunSpin {
@@ -728,28 +733,29 @@
 
   .day-title {
     font-family: 'Playfair Display', serif;
-    font-size: 28px;
+    font-size: 30px;
     color: #ffaa44;
     text-shadow: 0 0 30px rgba(255,140,0,0.6);
-    letter-spacing: 2px;
+    letter-spacing: 3px;
   }
 
   /* Chronomètre */
   .timer-zone {
     width: 100%;
-    padding: 20px;
+    padding: 16px 24px 8px;
     text-align: center;
+    flex-shrink: 0;
   }
 
   .timer-display {
     font-family: 'Oswald', sans-serif;
-    font-size: 72px;
+    font-size: 80px;
     font-weight: 600;
     color: var(--or);
     letter-spacing: 4px;
     text-shadow: 0 0 30px rgba(201,168,76,0.4);
     line-height: 1;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     transition: color 0.3s;
   }
 
@@ -762,9 +768,9 @@
 
   .timer-label {
     font-family: 'Oswald', sans-serif;
-    font-size: 11px;
-    letter-spacing: 4px;
-    color: rgba(212,201,168,0.5);
+    font-size: 10px;
+    letter-spacing: 5px;
+    color: rgba(212,201,168,0.4);
     text-transform: uppercase;
   }
 
@@ -772,11 +778,11 @@
     display: flex;
     gap: 10px;
     justify-content: center;
-    margin-top: 16px;
+    margin-top: 12px;
   }
 
   .btn-timer {
-    padding: 10px 18px;
+    padding: 10px 20px;
     font-family: 'Oswald', sans-serif;
     font-size: 12px;
     letter-spacing: 2px;
@@ -785,80 +791,102 @@
     border: 1px solid;
     transition: all 0.2s;
     background: transparent;
-  }
-
-  .btn-timer.pause {
-    border-color: var(--or);
-    color: var(--or);
     clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
   }
-  .btn-timer.add {
-    border-color: rgba(212,201,168,0.4);
-    color: var(--texte);
-    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
-  }
+  .btn-timer.pause { border-color: var(--or); color: var(--or); }
+  .btn-timer.add { border-color: rgba(212,201,168,0.35); color: var(--texte); }
   .btn-timer:active { opacity: 0.7; transform: scale(0.96); }
 
-  /* Liste suspects */
+  /* Divider débat */
+  .day-divider {
+    width: calc(100% - 48px);
+    margin: 12px 24px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent);
+    flex-shrink: 0;
+  }
+
+  /* Liste suspects - vote unique */
   .suspects-zone {
     width: 100%;
-    padding: 0 20px 20px;
+    padding: 0 20px 100px;
     flex: 1;
     overflow-y: auto;
   }
 
+  .suspects-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+  }
+
   .suspects-title {
     font-family: 'Oswald', sans-serif;
-    font-size: 11px;
+    font-size: 10px;
     letter-spacing: 4px;
-    color: rgba(212,201,168,0.5);
+    color: rgba(212,201,168,0.4);
     text-transform: uppercase;
-    margin-bottom: 12px;
-    border-bottom: 1px solid rgba(201,168,76,0.2);
-    padding-bottom: 8px;
+  }
+
+  .vote-hint {
+    font-family: 'Oswald', sans-serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: rgba(201,168,76,0.5);
+    text-transform: uppercase;
   }
 
   .suspect-item {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     padding: 14px 16px;
     margin-bottom: 8px;
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(201,168,76,0.15);
-    border-left: 3px solid rgba(201,168,76,0.4);
+    border-left: 3px solid rgba(201,168,76,0.35);
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
+    cursor: pointer;
+  }
+  .suspect-item:active { background: rgba(201,168,76,0.06); transform: scale(0.98); }
+
+  .suspect-item.voted {
+    border-left-color: var(--rouge-vif);
+    background: rgba(139,0,0,0.12);
+    box-shadow: inset 0 0 20px rgba(139,0,0,0.1);
   }
 
   .suspect-item.eliminated {
-    opacity: 0.4;
-    border-left-color: var(--rouge);
-    background: rgba(139,0,0,0.1);
+    opacity: 0.35;
+    border-left-color: rgba(139,0,0,0.4);
+    background: rgba(139,0,0,0.05);
+    cursor: default;
+    pointer-events: none;
   }
 
   .suspect-item.eliminated::after {
     content: '';
     position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
+    top: 50%; left: 0; right: 0;
     height: 1px;
-    background: var(--rouge-vif);
-    opacity: 0.7;
+    background: rgba(204,0,0,0.5);
   }
 
   .suspect-avatar {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--rouge) 0%, #3a0000 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Oswald', sans-serif;
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 600;
     color: var(--or);
     border: 1px solid rgba(201,168,76,0.3);
@@ -867,46 +895,74 @@
 
   .suspect-name {
     flex: 1;
-    font-size: 16px;
+    font-size: 17px;
     color: var(--texte);
+    font-family: 'Special Elite', cursive;
   }
 
-  .btn-eliminate {
-    padding: 8px 14px;
-    background: rgba(139,0,0,0.3);
-    border: 1px solid rgba(139,0,0,0.6);
-    color: var(--rouge-vif);
+  .suspect-vote-icon {
+    font-size: 20px;
+    opacity: 0.3;
+    transition: all 0.3s;
+  }
+  .suspect-item.voted .suspect-vote-icon { opacity: 1; }
+
+  .suspect-elim-badge {
     font-family: 'Oswald', sans-serif;
-    font-size: 10px;
+    font-size: 9px;
     letter-spacing: 2px;
+    color: rgba(204,0,0,0.6);
     text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
   }
-  .btn-eliminate:active { background: rgba(139,0,0,0.6); }
 
-  .btn-restore {
-    padding: 8px 14px;
-    background: rgba(0,80,0,0.3);
-    border: 1px solid rgba(0,100,0,0.6);
-    color: #66cc66;
-    font-family: 'Oswald', sans-serif;
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-restore:active { background: rgba(0,80,0,0.6); }
-
-  .day-actions {
-    width: 100%;
-    padding: 16px 20px;
+  /* Bottom bar jour */
+  .day-bottom {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    padding: 12px 20px 24px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.95) 40%);
+    z-index: 10;
     display: flex;
     gap: 10px;
-    border-top: 1px solid rgba(201,168,76,0.15);
-    background: linear-gradient(transparent, rgba(0,0,0,0.5));
+  }
+
+  /* ===== VOTE REVEAL OVERLAY ===== */
+  #vote-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.88);
+    padding: 20px 20px 100px;
+    overflow-y: auto;
+  }
+  #vote-overlay.visible { display: flex; }
+
+  .vote-reveal-content {
+    width: 100%;
+    max-width: 340px;
+    text-align: center;
+  }
+
+  .vote-reveal-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 5px;
+    color: var(--rouge-vif);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .vote-bottom {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    padding: 16px 20px 28px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.95) 40%);
+    z-index: 5001;
+    display: flex;
+    gap: 10px;
   }
 
   /* ===== RÈGLES ===== */
@@ -1357,26 +1413,72 @@
   <div class="day-header">
     <span class="sun-icon">☀️</span>
     <div class="day-title">LE DÉBAT</div>
-    <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:4px;color:rgba(212,201,168,0.5);text-transform:uppercase;margin-top:4px;" id="round-label">MANCHE 1</div>
+    <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:4px;color:rgba(212,201,168,0.4);text-transform:uppercase;margin-top:4px;" id="round-label">MANCHE 1</div>
   </div>
 
   <div class="timer-zone">
     <div class="timer-display" id="timer-display">05:00</div>
-    <div class="timer-label">TEMPS RESTANT</div>
+    <div class="timer-label">Temps restant</div>
     <div class="timer-controls">
       <button class="btn-timer pause" id="btn-pause" onclick="togglePause()">⏸ PAUSE</button>
       <button class="btn-timer add" onclick="addMinute()">+1 MIN</button>
     </div>
   </div>
 
+  <div class="day-divider"></div>
+
   <div class="suspects-zone">
-    <div class="suspects-title">Suspects actifs</div>
+    <div class="suspects-header">
+      <div class="suspects-title">Joueurs</div>
+      <div class="vote-hint">Votez pour éliminer →</div>
+    </div>
     <div id="suspects-list"></div>
   </div>
 
-  <div class="day-actions">
-    <button class="btn-secondary" style="flex:1;max-width:none;font-size:11px;" onclick="showScreen('night');startNightAudio()">🌙 NUIT</button>
-    <button class="btn-primary" style="flex:2;max-width:none;font-size:12px;" onclick="showScreen('end')">FIN DE PARTIE</button>
+  <div class="day-bottom">
+    <button class="btn-primary" style="flex:1;max-width:none;font-size:13px;letter-spacing:2px;" onclick="showScreen('end')">FIN DE PARTIE</button>
+  </div>
+</div>
+
+<!-- ========== VOTE REVEAL OVERLAY ========== -->
+<div id="vote-overlay">
+  <div class="vote-reveal-content">
+    <div class="vote-reveal-label">Joueur éliminé — Révélation</div>
+    <div class="flip-zone" id="vote-flip-zone">
+      <div class="flip-inner" id="vote-flip-inner">
+        <div class="flip-front">
+          <div class="dossier-back" style="min-height:380px;">
+            <div class="lock-icon">⚖️</div>
+            <p id="vote-player-name-front">Le joueur est jugé...</p>
+            <p style="font-size:9px;opacity:0.4;margin-top:6px;">Tapez pour révéler le rôle</p>
+          </div>
+        </div>
+        <div class="flip-back">
+          <div class="dossier-card" id="vote-dossier-card">
+            <div class="card-header">
+              <span>VERDICT</span>
+              <span>RÉVÉLÉ</span>
+            </div>
+            <div class="role-image-zone" id="vote-role-image-zone">
+              <div class="role-emoji-fallback" id="vote-role-emoji">🔫</div>
+            </div>
+            <div class="card-body">
+              <div class="role-badge" id="vote-role-badge">● MAFIA</div>
+              <div class="role-name" id="vote-role-name">MAFIEUX</div>
+              <div class="role-desc" id="vote-role-desc"></div>
+              <div class="card-footer">
+                <div class="player-name-reveal" id="vote-player-name">Tony</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="reveal-instruction" id="vote-instruction" style="margin-top:14px;">Tapez la carte pour révéler</div>
+  </div>
+  <div class="vote-bottom">
+    <button class="btn-secondary" style="flex:1;max-width:none;font-size:12px;" onclick="closeVoteOverlay()">← ANNULER</button>
+    <button class="btn-primary" id="btn-confirm-elim" style="flex:2;max-width:none;font-size:12px;display:none;" onclick="confirmElimination()">CONFIRMER L'ÉLIMINATION</button>
   </div>
 </div>
 
@@ -1399,7 +1501,6 @@
 <audio id="audio-night" loop preload="auto">
   <source src="ambiance-nuit.mp3" type="audio/mpeg">
 </audio>
-<audio id="audio-vo" preload="auto"></audio>
 
 <script>
 // ============================================================
@@ -1417,9 +1518,11 @@ const state = {
   timerInterval: null,
   eliminated: new Set(),
   audioEnabled: true,
-  currentAudio: null,
+  voAudio: null,
   hasUndercover: false,
-  hasMafia: false
+  hasMafia: false,
+  voteCandidate: null,
+  voteRevealed: false
 };
 
 // ============================================================
@@ -1509,30 +1612,34 @@ function startNightAudio() {
 }
 
 function playVO(filename, callback) {
-  // Always clean up previous state first
-  audioVO.pause();
-  audioVO.onended = null;
-  audioVO.onerror = null;
+  // Stop any current VO
+  if (state.voAudio) {
+    state.voAudio.onended = null;
+    state.voAudio.onerror = null;
+    state.voAudio.pause();
+  }
 
   if (!state.audioEnabled) {
     if (callback) setTimeout(callback, 800);
     return;
   }
 
-  audioVO.src = filename + '.mp3';
-  audioVO.onended = function() {
-    audioVO.onended = null;
+  // Create a fresh Audio object each time — avoids all src/load conflicts
+  const audio = new Audio(filename + '.mp3');
+  state.voAudio = audio;
+
+  audio.onended = function() {
+    if (state.voAudio !== audio) return;
     if (callback) callback();
   };
-  audioVO.onerror = function() {
-    audioVO.onerror = null;
-    // File missing or error — wait 1s and continue chain
-    console.warn('VO missing:', filename);
-    if (callback) setTimeout(callback, 1000);
+
+  audio.onerror = function() {
+    if (state.voAudio !== audio) return;
+    console.warn('VO manquant:', filename);
+    if (callback) setTimeout(callback, 800);
   };
 
-  audioVO.play().catch(function() {
-    // Autoplay blocked — still continue chain after delay
+  audio.play().catch(function() {
     if (callback) setTimeout(callback, 800);
   });
 }
@@ -1540,7 +1647,11 @@ function playVO(filename, callback) {
 function stopAllAudio() {
   audioAmbiance.pause();
   audioNight.pause();
-  audioVO.pause();
+  if (state.voAudio) {
+    state.voAudio.onended = null;
+    state.voAudio.pause();
+    state.voAudio = null;
+  }
 }
 
 // ============================================================
@@ -1563,8 +1674,11 @@ function showScreen(name) {
   }
 
   if (name === 'day') {
+    state.timerSeconds = 300;
+    updateTimerDisplay();
     updateSuspectsList();
     startTimer();
+    document.getElementById('round-label').textContent = `MANCHE ${state.roundNumber}`;
   }
   if (name === 'end') {
     stopAllAudio();
@@ -1884,9 +1998,6 @@ function nextNightStep() {
 function goToDay() {
   state.roundNumber++;
   showScreen('day');
-  document.getElementById('round-label').textContent = `MANCHE ${state.roundNumber - 1}`;
-  state.timerSeconds = 300;
-  updateTimerDisplay();
 }
 
 // ============================================================
@@ -1935,24 +2046,100 @@ function addMinute() {
 }
 
 // ============================================================
-// SUSPECTS
+// SUSPECTS & VOTE
 // ============================================================
 function updateSuspectsList() {
   const list = document.getElementById('suspects-list');
   list.innerHTML = '';
   state.players.forEach((p, i) => {
     const isElim = state.eliminated.has(i);
+    const isVoted = state.voteCandidate === i;
     const div = document.createElement('div');
-    div.className = 'suspect-item' + (isElim ? ' eliminated' : '');
+    div.className = 'suspect-item' + (isElim ? ' eliminated' : isVoted ? ' voted' : '');
+    div.onclick = isElim ? null : () => openVoteOverlay(i);
     div.innerHTML = `
       <div class="suspect-avatar">${p.charAt(0).toUpperCase()}</div>
       <div class="suspect-name">${p}</div>
       ${isElim
-        ? `<button class="btn-restore" onclick="restorePlayer(${i})">↩ RESTAURER</button>`
-        : `<button class="btn-eliminate" onclick="eliminatePlayer(${i})">✕ ÉLIMINER</button>`}
+        ? '<span class="suspect-elim-badge">ÉLIMINÉ</span>'
+        : `<span class="suspect-vote-icon">${isVoted ? '🗳️' : '○'}</span>`}
     `;
     list.appendChild(div);
   });
+}
+
+function openVoteOverlay(playerIndex) {
+  state.voteCandidate = playerIndex;
+  state.voteRevealed = false;
+  const player = state.players[playerIndex];
+
+  // Reset the flip card
+  const flipInner = document.getElementById('vote-flip-inner');
+  const newFlip = flipInner.cloneNode(true);
+  flipInner.parentNode.replaceChild(newFlip, flipInner);
+
+  document.getElementById('vote-player-name-front').textContent = `${player} — Tapez pour révéler`;
+  document.getElementById('vote-instruction').textContent = 'Tapez la carte pour révéler le rôle';
+  document.getElementById('btn-confirm-elim').style.display = 'none';
+
+  // Attach flip click
+  newFlip.addEventListener('click', revealVoteCard, { once: true });
+
+  document.getElementById('vote-overlay').classList.add('visible');
+  updateSuspectsList();
+}
+
+function revealVoteCard() {
+  if (state.voteRevealed) return;
+  const i = state.voteCandidate;
+  const role = state.roles[i];
+  const rd = ROLE_DATA[role];
+  const player = state.players[i];
+
+  // Fill card data
+  const imgZone = document.getElementById('vote-role-image-zone');
+  imgZone.innerHTML = '';
+  const img = new Image();
+  img.src = `role-${role}.png`;
+  img.onload = () => {
+    imgZone.innerHTML = '';
+    imgZone.appendChild(img);
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;opacity:0.85;filter:contrast(1.1) saturate(0.7);';
+  };
+  img.onerror = () => { imgZone.innerHTML = `<div class="role-emoji-fallback">${rd.emoji}</div>`; };
+
+  document.getElementById('vote-role-badge').textContent = rd.badge;
+  document.getElementById('vote-role-badge').className = `role-badge ${rd.class}`;
+  document.getElementById('vote-role-name').textContent = rd.name;
+  document.getElementById('vote-role-name').className = `role-name ${rd.class}`;
+  document.getElementById('vote-role-desc').textContent = rd.desc;
+  document.getElementById('vote-player-name').textContent = player;
+
+  document.getElementById('vote-flip-inner').classList.add('flipped');
+  state.voteRevealed = true;
+  document.getElementById('vote-instruction').textContent = 'Rôle révélé — Confirmez l\'élimination';
+  document.getElementById('btn-confirm-elim').style.display = 'block';
+}
+
+function confirmElimination() {
+  state.eliminated.add(state.voteCandidate);
+  closeVoteOverlay();
+  showToast(`${state.players[state.voteCandidate]} a été éliminé`);
+  state.voteCandidate = null;
+
+  // Pause timer, go to night automatically
+  state.timerRunning = false;
+  if (state.timerInterval) clearInterval(state.timerInterval);
+
+  setTimeout(() => {
+    showScreen('night');
+  }, 1200);
+}
+
+function closeVoteOverlay() {
+  document.getElementById('vote-overlay').classList.remove('visible');
+  state.voteCandidate = null;
+  updateSuspectsList();
 }
 
 function eliminatePlayer(i) {
@@ -1994,7 +2181,10 @@ function resetGame() {
   state.eliminated = new Set();
   state.roundNumber = 1;
   state.timerSeconds = 300;
+  state.voteCandidate = null;
+  state.voteRevealed = false;
   if (state.timerInterval) clearInterval(state.timerInterval);
+  document.getElementById('vote-overlay').classList.remove('visible');
   showScreen('config');
   updatePlayersUI();
 }
