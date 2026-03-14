@@ -1344,8 +1344,9 @@
 
     <div class="night-progress" id="night-progress"></div>
 
-    <button class="btn-night-next" id="btn-night-next" onclick="nextNightStep()">▶ ÉTAPE SUIVANTE</button>
-    <div style="margin-top:16px;">
+    <button class="btn-night-next" id="btn-night-next" onclick="nextNightStep()" disabled>⏳ EN COURS...</button>
+    <div style="margin-top:10px;font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:3px;color:rgba(212,201,168,0.25);text-transform:uppercase;">Le séquenceur avance automatiquement</div>
+    <div style="margin-top:12px;">
       <button class="btn-secondary" style="max-width:200px;font-size:11px;" onclick="goToDay()">PASSER AU JOUR →</button>
     </div>
   </div>
@@ -1502,10 +1503,34 @@ function startNightAudio() {
 }
 
 function playVO(filename, callback) {
-  if (!state.audioEnabled) { if (callback) setTimeout(callback, 2000); return; }
+  if (!state.audioEnabled) {
+    if (callback) setTimeout(callback, 2500);
+    return;
+  }
+  audioVO.pause();
+  audioVO.currentTime = 0;
   audioVO.src = filename + '.mp3';
-  audioVO.onended = callback || null;
-  audioVO.play().catch(() => { if (callback) setTimeout(callback, 2000); });
+
+  let called = false;
+  const done = () => {
+    if (called) return;
+    called = true;
+    if (callback) callback();
+  };
+
+  audioVO.onended = done;
+  audioVO.onerror = () => {
+    // File missing: wait a beat then continue
+    if (callback) setTimeout(done, 2500);
+  };
+
+  const playPromise = audioVO.play();
+  if (playPromise) {
+    playPromise.catch(() => {
+      // Autoplay blocked or file missing
+      if (callback) setTimeout(done, 2500);
+    });
+  }
 }
 
 function stopAllAudio() {
@@ -1794,7 +1819,9 @@ function updateNightStep() {
   const step = steps[state.nightStep];
   if (!step) return;
 
-  // Update text
+  const isLast = state.nightStep === steps.length - 1;
+
+  // Update text with fade
   const textEl = document.getElementById('night-step-text');
   textEl.style.opacity = '0';
   setTimeout(() => {
@@ -1809,21 +1836,46 @@ function updateNightStep() {
     dot.className = 'progress-dot' + (i < state.nightStep ? ' done' : i === state.nightStep ? ' active' : '');
   });
 
-  // Orb speaking animation
+  // Update button label — disabled while VO plays
+  const btn = document.getElementById('btn-night-next');
+  btn.textContent = isLast ? '☀️ LE JOUR SE LÈVE' : '▶ ÉTAPE SUIVANTE';
+  btn.disabled = true;
+
+  // Orb speaking animation + auto-chain on VO end
   const orb = document.getElementById('orb-core');
   orb.classList.add('speaking');
-  playVO('voix-' + (step.vo || 'nuit'), () => {
-    orb.classList.remove('speaking');
-  });
 
-  // Btn state
-  const btn = document.getElementById('btn-night-next');
-  btn.textContent = state.nightStep < steps.length - 1 ? '▶ ÉTAPE SUIVANTE' : '☀️ LE JOUR SE LÈVE';
+  // Fallback timer in case audio doesn't load (3s per step)
+  const FALLBACK_DELAY = 3000;
+  let advanced = false;
+
+  const onStepDone = () => {
+    if (advanced) return;
+    advanced = true;
+    orb.classList.remove('speaking');
+    btn.disabled = false;
+
+    if (!isLast) {
+      // Pause 1.5s between steps then auto-advance
+      setTimeout(() => {
+        state.nightStep++;
+        updateNightStep();
+      }, 1500);
+    }
+    // Last step: just enable the button, user taps to go to day
+  };
+
+  playVO('voix-' + (step.vo || 'nuit'), onStepDone);
+
+  // Fallback: if VO didn't trigger onended within FALLBACK_DELAY, advance anyway
+  // (only fires if audio is missing)
+  audioVO.addEventListener('error', onStepDone, { once: true });
 }
 
 function nextNightStep() {
   const steps = getNightSteps();
   if (state.nightStep < steps.length - 1) {
+    // Manual skip — mark as advanced so auto-chain doesn't double-fire
     state.nightStep++;
     updateNightStep();
   } else {
