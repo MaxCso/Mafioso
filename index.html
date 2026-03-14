@@ -674,7 +674,7 @@ const S = {
   nightStep: 0, roundNumber: 1,
   timerSec: 300, timerTotal: 300, timerRunning: false, timerInterval: null,
   eliminated: new Set(),
-  audioOn: true, voAudio: null,
+  audioOn: true,
   hasUndercover: false, hasMafia: false,
   voteIdx: null, voteRevealed: false,
   audioUnlocked: false, poolWarmed: false
@@ -716,39 +716,74 @@ function getNightSteps() {
 // AUDIO
 // ════════════════════════════════════
 
-// Single reusable VO element — set src then play, never create new Audio() in setTimeout
-const audVO = document.createElement('audio');
-audVO.preload = 'none';
-document.body.appendChild(audVO);
-
-// Pool: filename → Audio object pre-created during a user gesture
-const voPool = {};
+let audioCtx = null;
+const voBuffers = {};  // filename → AudioBuffer (pre-decoded)
+let currentVoSource = null;
+let voEndCallback = null;
 
 const ALL_VO_FILES = [
   'voix-debut','voix-nuit','voix-mafia-reveil','voix-mafia-dodo',
   'voix-under-reveil','voix-jour','voix-60s','voix-chrono-fin'
 ];
 
-// Call this inside a real user-gesture handler (tap/click)
+// Create/resume AudioContext — must be called inside a user gesture
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
+  return audioCtx;
+}
+
+// Pre-fetch and decode all VO files. Call inside a user gesture (tap).
 function warmVoPool() {
   if (S.poolWarmed) return;
   S.poolWarmed = true;
+  const ctx = getAudioCtx(); // unlock context in gesture
   ALL_VO_FILES.forEach(f => {
-    const a = new Audio(f + '.mp3');
-    a.preload = 'auto';
-    a.volume = 0;      // silent
-    a.muted  = true;   // doubly silent — iOS still counts this as unlocked
-    a.play().then(() => {
-      a.pause();
-      a.currentTime = 0;
-      a.volume = 1;    // restore volume for real playback later
-      a.muted  = false;
-    }).catch(() => {
-      a.volume = 1;
-      a.muted  = false;
-    });
-    voPool[f] = a;
+    fetch(f + '.mp3')
+      .then(r => r.arrayBuffer())
+      .then(buf => ctx.decodeAudioData(buf))
+      .then(decoded => { voBuffers[f] = decoded; })
+      .catch(() => {}); // file missing — will fallback gracefully
   });
+}
+
+function stopVO() {
+  if (currentVoSource) {
+    currentVoSource.onended = null;
+    try { currentVoSource.stop(); } catch(e) {}
+    currentVoSource = null;
+  }
+  voEndCallback = null;
+}
+
+function playVO(file, cb) {
+  stopVO();
+  if (!S.audioOn) { if (cb) setTimeout(cb, 600); return; }
+
+  const buf = voBuffers[file];
+  if (buf && audioCtx) {
+    // Play via AudioContext — fully iOS safe, no gesture required at playback time
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(audioCtx.destination);
+    currentVoSource = src;
+    voEndCallback = cb;
+    src.onended = () => {
+      if (currentVoSource === src) {
+        currentVoSource = null;
+        voEndCallback = null;
+        if (cb) cb();
+      }
+    };
+    src.start(0);
+  } else {
+    // Buffer not ready (file missing or not decoded yet) — skip after short pause
+    if (cb) setTimeout(cb, 600);
+  }
 }
 
 function startDayAudio() {
@@ -765,47 +800,13 @@ function startNightAudio() {
   audNight.play().catch(() => {});
 }
 
-function stopVO() {
-  audVO.onended = null;
-  audVO.onerror = null;
-  try { audVO.pause(); } catch(e){}
-  // Also stop pool item if playing
-  if (S.voAudio) {
-    try { S.voAudio.pause(); } catch(e){}
-    S.voAudio.onended = null;
-    S.voAudio = null;
-  }
-}
-
-function playVO(file, cb) {
-  stopVO();
-  if (!S.audioOn) { if (cb) setTimeout(cb, 600); return; }
-
-  // Use pre-warmed pool item if available (iOS safe)
-  const poolItem = voPool[file];
-  if (poolItem) {
-    S.voAudio = poolItem;
-    poolItem.currentTime = 0;
-    poolItem.onended = () => { poolItem.onended = null; poolItem.onerror = null; S.voAudio = null; if (cb) cb(); };
-    poolItem.onerror = () => { poolItem.onerror = null; poolItem.onended = null; S.voAudio = null; if (cb) setTimeout(cb, 400); };
-    poolItem.play().catch(() => { S.voAudio = null; if (cb) setTimeout(cb, 400); });
-    return;
-  }
-
-  // Fallback: direct play (works on desktop, may fail on iOS if not in gesture)
-  audVO.src = file + '.mp3';
-  audVO.onended = () => { audVO.onended = null; if (cb) cb(); };
-  audVO.onerror = () => { audVO.onerror = null; if (cb) setTimeout(cb, 400); };
-  audVO.load();
-  audVO.play().catch(() => { if (cb) setTimeout(cb, 400); });
-}
-
 function toggleAudio() {
   S.audioOn = !S.audioOn;
   document.getElementById('audio-icon').textContent = S.audioOn ? '🔊' : '🔇';
   document.getElementById('audio-lbl').textContent  = S.audioOn ? 'SON' : 'MUET';
-  if (!S.audioOn) { audDay.pause(); audNight.pause(); stopVO(); }
-  else {
+  if (!S.audioOn) {
+    audDay.pause(); audNight.pause(); stopVO();
+  } else {
     const id = document.querySelector('.screen.active')?.id;
     if (id === 'screen-night') startNightAudio(); else startDayAudio();
   }
