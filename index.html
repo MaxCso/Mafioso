@@ -677,7 +677,7 @@ const S = {
   audioOn: true, voAudio: null,
   hasUndercover: false, hasMafia: false,
   voteIdx: null, voteRevealed: false,
-  audioUnlocked: false
+  audioUnlocked: false, poolWarmed: false
 };
 
 const audDay   = document.getElementById('aud-day');
@@ -715,13 +715,31 @@ function getNightSteps() {
 // ════════════════════════════════════
 // AUDIO
 // ════════════════════════════════════
-function unlockAudio() {
-  // iOS requires user interaction to unlock audio context
-  if (S.audioUnlocked) return;
-  S.audioUnlocked = true;
-  audDay.play().then(() => {
-    if (!S.audioOn) audDay.pause();
-  }).catch(() => {});
+
+// Single reusable VO element — set src then play, never create new Audio() in setTimeout
+const audVO = document.createElement('audio');
+audVO.preload = 'none';
+document.body.appendChild(audVO);
+
+// Pool: filename → Audio object pre-created during a user gesture
+const voPool = {};
+
+const ALL_VO_FILES = [
+  'voix-debut','voix-nuit','voix-mafia-reveil','voix-mafia-dodo',
+  'voix-under-reveil','voix-jour','voix-60s','voix-chrono-fin'
+];
+
+// Call this inside a real user-gesture handler (tap/click)
+function warmVoPool() {
+  if (S.poolWarmed) return;
+  S.poolWarmed = true;
+  ALL_VO_FILES.forEach(f => {
+    const a = new Audio(f + '.mp3');
+    a.preload = 'auto';
+    // Silent play+pause to unlock on iOS
+    a.play().then(() => a.pause()).catch(() => {});
+    voPool[f] = a;
+  });
 }
 
 function startDayAudio() {
@@ -739,10 +757,13 @@ function startNightAudio() {
 }
 
 function stopVO() {
+  audVO.onended = null;
+  audVO.onerror = null;
+  try { audVO.pause(); } catch(e){}
+  // Also stop pool item if playing
   if (S.voAudio) {
-    S.voAudio.onended = null;
-    S.voAudio.onerror = null;
     try { S.voAudio.pause(); } catch(e){}
+    S.voAudio.onended = null;
     S.voAudio = null;
   }
 }
@@ -750,11 +771,24 @@ function stopVO() {
 function playVO(file, cb) {
   stopVO();
   if (!S.audioOn) { if (cb) setTimeout(cb, 600); return; }
-  const a = new Audio(file + '.mp3');
-  S.voAudio = a;
-  a.onended = () => { if (S.voAudio === a) { S.voAudio = null; if (cb) cb(); } };
-  a.onerror = () => { if (S.voAudio === a) { S.voAudio = null; if (cb) setTimeout(cb, 600); } };
-  a.play().catch(() => { if (S.voAudio === a) { S.voAudio = null; if (cb) setTimeout(cb, 600); } });
+
+  // Use pre-warmed pool item if available (iOS safe)
+  const poolItem = voPool[file];
+  if (poolItem) {
+    S.voAudio = poolItem;
+    poolItem.currentTime = 0;
+    poolItem.onended = () => { poolItem.onended = null; poolItem.onerror = null; S.voAudio = null; if (cb) cb(); };
+    poolItem.onerror = () => { poolItem.onerror = null; poolItem.onended = null; S.voAudio = null; if (cb) setTimeout(cb, 400); };
+    poolItem.play().catch(() => { S.voAudio = null; if (cb) setTimeout(cb, 400); });
+    return;
+  }
+
+  // Fallback: direct play (works on desktop, may fail on iOS if not in gesture)
+  audVO.src = file + '.mp3';
+  audVO.onended = () => { audVO.onended = null; if (cb) cb(); };
+  audVO.onerror = () => { audVO.onerror = null; if (cb) setTimeout(cb, 400); };
+  audVO.load();
+  audVO.play().catch(() => { if (cb) setTimeout(cb, 400); });
 }
 
 function toggleAudio() {
@@ -879,6 +913,7 @@ function shuffle(a) {
 }
 
 function startGame() {
+  warmVoPool(); // user gesture — unlock all VO audio on iOS
   const vp = S.players.filter(p=>p.trim());
   if (vp.length<3) { showToast('Minimum 3 joueurs'); return; }
   const n = vp.length;
@@ -949,6 +984,7 @@ function revealNext() {
     S.currentReveal++;
     setupReveal();
   } else {
+    warmVoPool(); // final tap before night — warm pool in gesture context
     showScreen('night');
   }
 }
@@ -964,49 +1000,8 @@ function initNight() {
   document.getElementById('btn-day').style.display = 'none';
   document.getElementById('night-text').style.opacity = '1';
   document.getElementById('night-text').textContent = 'La nuit enveloppe la ville...';
-  // Give night music 1.8s to set the mood, then start narration
-  setTimeout(() => runStep(0), 1800);
-}
-
-function runStep(idx) {
-  const steps = getNightSteps();
-  if (idx >= steps.length) {
-    // Sequence complete
-    const btn = document.getElementById('btn-day');
-    btn.style.display = 'block';
-    return;
-  }
-
-  S.nightStep = idx;
-  const step = steps[idx];
-  const isLast = idx === steps.length - 1;
-
-  // Update dots
-  steps.forEach((_,i) => {
-    const d = document.getElementById('nd'+i);
-    if (d) d.className = 'ndot' + (i<idx?' done':i===idx?' active':'');
-  });
-
-  // Fade text
-  const el = document.getElementById('night-text');
-  el.style.opacity = '0';
-  setTimeout(() => { el.textContent = step.text; el.style.opacity = '1'; }, 400);
-
-  // Orb
-  const orb = document.getElementById('orb');
-  orb.classList.add('speaking');
-
-  // Play VO — chain naturally on end
-  playVO(step.vo, () => {
-    orb.classList.remove('speaking');
-    if (isLast) {
-      setTimeout(() => {
-        document.getElementById('btn-day').style.display = 'block';
-      }, 800);
-    } else {
-      setTimeout(() => runStep(idx + 1), 1800);
-    }
-  });
+  // 2.5s for night music to settle, then start narration
+  setTimeout(() => runStep(0), 2500);
 }
 
 function runStep(idx) {
@@ -1261,7 +1256,7 @@ function buildEndScreen() {
 function resetGame() {
   stopAll();
   S.players=['','','']; S.roles=[]; S.eliminated=new Set();
-  S.roundNumber=1; S.timerSec=300; S.timerTotal=300; S.voteIdx=null; S.voteRevealed=false;
+  S.roundNumber=1; S.timerSec=300; S.timerTotal=300; S.voteIdx=null; S.voteRevealed=false; S.poolWarmed=false;
   if (S.timerInterval) clearInterval(S.timerInterval);
   document.getElementById('vote-overlay').classList.remove('open');
   showScreen('config'); renderPlayers();
