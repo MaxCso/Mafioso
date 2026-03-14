@@ -1100,9 +1100,10 @@
     border: 1px solid rgba(201,168,76,0.2);
   }
   .loading-icon-ring img {
-    width: 52px;
-    height: 52px;
-    object-fit: contain;
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 50%;
     filter: drop-shadow(0 0 8px rgba(201,168,76,0.4));
   }
   .loading-icon-ring .icon-emoji {
@@ -1427,38 +1428,44 @@ const state = {
 function getNightSteps() {
   const steps = [
     {
+      text: "Posez le téléphone.\nLe narrateur va prendre la suite...",
+      vo: 'voix-debut'
+    },
+    {
       text: "Que tout le monde ferme les yeux...\nLa ville s'endort.",
-      vo: 'voix-nuit',
-      emoji: '😴'
+      vo: 'voix-nuit'
     },
     {
       text: "La Famiglia se réveille.\nMafieux, ouvrez les yeux et reconnaissez-vous.",
       vo: 'voix-mafia-reveil',
-      emoji: '🔫',
       onlyIf: 'mafia'
     },
     {
       text: "Mafieux, fermez les yeux.\nLa Famiglia se rendort.",
       vo: 'voix-mafia-dodo',
-      emoji: '🌙',
       onlyIf: 'mafia'
     },
     {
       text: "L'Infiltré se réveille.\nObservez les mafieux en silence.",
       vo: 'voix-under-reveil',
-      emoji: '🕵️',
       onlyIf: 'undercover'
     },
     {
       text: "L'Infiltré se rendort.\nTout le monde peut ouvrir les yeux.\nLe jour se lève sur la ville.",
       vo: 'voix-jour',
-      emoji: '☀️'
+      onlyIf: 'undercover'
+    },
+    {
+      text: "Tout le monde peut ouvrir les yeux.\nLe jour se lève sur la ville.\nLe débat peut commencer.",
+      vo: 'voix-jour',
+      onlyIf: 'no-undercover'
     }
   ];
 
   return steps.filter(s => {
     if (s.onlyIf === 'mafia') return state.hasMafia;
     if (s.onlyIf === 'undercover') return state.hasUndercover;
+    if (s.onlyIf === 'no-undercover') return !state.hasUndercover;
     return true;
   });
 }
@@ -1502,35 +1509,31 @@ function startNightAudio() {
 }
 
 function playVO(filename, callback) {
+  // Always clean up previous state first
   audioVO.pause();
   audioVO.onended = null;
   audioVO.onerror = null;
 
   if (!state.audioEnabled) {
-    if (callback) setTimeout(callback, 1000);
+    if (callback) setTimeout(callback, 800);
     return;
   }
 
   audioVO.src = filename + '.mp3';
-
-  audioVO.onended = () => {
+  audioVO.onended = function() {
     audioVO.onended = null;
-    audioVO.onerror = null;
     if (callback) callback();
   };
-
-  audioVO.onerror = () => {
-    audioVO.onended = null;
+  audioVO.onerror = function() {
     audioVO.onerror = null;
-    // File missing — wait 1s then continue
+    // File missing or error — wait 1s and continue chain
+    console.warn('VO missing:', filename);
     if (callback) setTimeout(callback, 1000);
   };
 
-  audioVO.load();
-  audioVO.play().catch(() => {
-    audioVO.onended = null;
-    audioVO.onerror = null;
-    if (callback) setTimeout(callback, 1000);
+  audioVO.play().catch(function() {
+    // Autoplay blocked — still continue chain after delay
+    if (callback) setTimeout(callback, 800);
   });
 }
 
@@ -1793,11 +1796,8 @@ function revealNext() {
     state.currentReveal++;
     setupRevealScreen();
   } else {
-    // All revealed — play intro VO then go to night
+    // All revealed — go to night, sequence handles everything
     showScreen('night');
-    playVO('voix-debut', () => {
-      // VO done, night screen already visible
-    });
   }
 }
 
@@ -1812,11 +1812,13 @@ function initNightScreen() {
   const prog = document.getElementById('night-progress');
   prog.innerHTML = steps.map((_, i) => `<div class="progress-dot" id="dot-${i}"></div>`).join('');
 
-  // Hide the manual button — sequence is fully automatic
-  document.getElementById('btn-night-next').style.display = 'none';
+  // Reset button
+  const btn = document.getElementById('btn-night-next');
+  btn.style.display = 'none';
+  btn.disabled = true;
 
-  // Start the automatic chain after a short intro pause
-  setTimeout(() => runNightStep(0), 1200);
+  // Wait for night music to settle, then start sequence
+  setTimeout(() => runNightStep(0), 2000);
 }
 
 function runNightStep(index) {
