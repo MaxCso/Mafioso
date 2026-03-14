@@ -227,9 +227,13 @@ input[type="text"]::placeholder { color:rgba(212,201,168,0.25); }
 }
 
 /* ── REVEAL ── */
-#screen-reveal { background:url('bg-main.png') center/cover no-repeat; justify-content:flex-start; padding:0 20px calc(100px + var(--safe-bot)); }
+#screen-reveal {
+  background:url('bg-main.png') center/cover no-repeat;
+  justify-content:center;
+  padding:calc(60px + var(--safe-top)) 20px calc(100px + var(--safe-bot));
+}
 #screen-reveal::after { content:''; position:fixed; inset:0; background:rgba(0,0,0,0.76); pointer-events:none; }
-.reveal-wrap { position:relative; z-index:1; width:100%; text-align:center; padding-top:calc(16px + var(--safe-top)); }
+.reveal-wrap { position:relative; z-index:1; width:100%; text-align:center; }
 .reveal-counter { font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:3px; color:rgba(212,201,168,0.45); text-transform:uppercase; margin-bottom:14px; }
 
 /* flip */
@@ -1008,8 +1012,12 @@ function runStep(idx) {
 function runStep(idx) {
   const steps = getNightSteps();
   if (idx >= steps.length) {
-    // Sequence complete — auto go to day after short pause
-    setTimeout(() => goToDay(), 1200);
+    // All done — show skip button, auto-go to day after 3s
+    const btn = document.getElementById('btn-day');
+    btn.style.display = 'block';
+    setTimeout(() => {
+      if (document.getElementById('screen-night').classList.contains('active')) goToDay();
+    }, 3000);
     return;
   }
 
@@ -1023,24 +1031,28 @@ function runStep(idx) {
     if (d) d.className = 'ndot' + (i<idx?' done':i===idx?' active':'');
   });
 
-  // Fade text
+  // Fade text out, then in with new content
   const el = document.getElementById('night-text');
   el.style.opacity = '0';
-  setTimeout(() => { el.textContent = step.text; el.style.opacity = '1'; }, 400);
+  setTimeout(() => { el.textContent = step.text; el.style.opacity = '1'; }, 500);
 
-  // Orb
+  // Orb pulse
   const orb = document.getElementById('orb');
   orb.classList.add('speaking');
 
+  // Play VO — wait for it to fully end, then pause 2.5s before next step
   playVO(step.vo, () => {
     orb.classList.remove('speaking');
     if (isLast) {
-      // Show skip button as fallback, auto-advance after 2s
       const btn = document.getElementById('btn-day');
       btn.style.display = 'block';
-      setTimeout(() => goToDay(), 2000);
+      // Auto-go to day 3s after last VO ends
+      setTimeout(() => {
+        if (document.getElementById('screen-night').classList.contains('active')) goToDay();
+      }, 3000);
     } else {
-      setTimeout(() => runStep(idx + 1), 1800);
+      // Pause between steps: 2.5s of silence before next VO
+      setTimeout(() => runStep(idx + 1), 2500);
     }
   });
 }
@@ -1100,22 +1112,24 @@ function addMinute() {
 // WIN DETECTION
 // ════════════════════════════════════
 function checkWin() {
-  const activePlayers = S.players.filter((_,i) => !S.eliminated.has(i));
-  const activeMafia   = activePlayers.filter((_,i2) => {
-    const realIdx = S.players.indexOf(_); // may have duplicates; safer:
-    return false; // will redo below
-  });
-  // Count active by role
-  let aliveMafia = 0, alivePolice = 0;
+  let aliveMafia = 0, aliveNonMafia = 0;
   S.players.forEach((_, i) => {
     if (S.eliminated.has(i)) return;
     if (S.roles[i] === 'mafia') aliveMafia++;
-    else alivePolice++;
+    else aliveNonMafia++;  // police + undercover both count as non-mafia
   });
 
-  if (aliveMafia === 0) return 'police';          // all mafia eliminated
-  if (aliveMafia >= alivePolice) return 'mafia';  // mafia = or > police
-  return null;
+  // Police wins: all mafia eliminated
+  if (aliveMafia === 0) return 'police';
+
+  // Mafia wins: mafia players >= non-mafia players (they can control the vote)
+  // Need at least 1 non-mafia alive (otherwise everyone is mafia = trivial)
+  if (aliveNonMafia > 0 && aliveMafia >= aliveNonMafia) return 'mafia';
+
+  // Edge case: everyone eliminated somehow
+  if (aliveNonMafia === 0 && aliveMafia === 0) return 'police';
+
+  return null; // Game continues
 }
 
 function showWinnerBanner(winner) {
@@ -1270,18 +1284,31 @@ function init() {
   renderPlayers();
   initStars();
 
-  // Unlock audio on first user tap anywhere
-  document.addEventListener('touchstart', unlockAudio, { once: true });
-  document.addEventListener('mousedown',  unlockAudio, { once: true });
+  // The loading overlay itself acts as the required user gesture on iOS.
+  // We start music as soon as the overlay disappears (after the bar finishes).
+  // On desktop autoplay usually works directly.
+  const overlay = document.getElementById('loading-overlay');
 
-  // Hide loader, show home, start music
+  // Tap anywhere on loader = unlock gesture
+  overlay.addEventListener('touchstart', () => { S.audioUnlocked = true; }, { once: true });
+  overlay.addEventListener('mousedown',  () => { S.audioUnlocked = true; }, { once: true });
+
   setTimeout(() => {
-    const overlay = document.getElementById('loading-overlay');
     overlay.classList.add('hide');
     setTimeout(() => {
       overlay.remove();
       document.getElementById('screen-home').classList.add('active');
-      startDayAudio();
+      // Try to play immediately; if blocked, attach a one-shot listener on the home buttons
+      audDay.volume = 0.5;
+      const playPromise = audDay.play();
+      if (playPromise) {
+        playPromise.catch(() => {
+          // Autoplay blocked (iOS strict) — start on first tap
+          const startOnTap = () => { audDay.play().catch(()=>{}); };
+          document.addEventListener('touchstart', startOnTap, { once: true });
+          document.addEventListener('mousedown',  startOnTap, { once: true });
+        });
+      }
     }, 1000);
   }, 2400);
 }
