@@ -2,2228 +2,1151 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>La Famiglia — Jeu de Mafia</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>La Famiglia</title>
 <link rel="icon" type="image/jpeg" href="icon.jpg">
 <link rel="apple-touch-icon" href="icon.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Special+Elite&family=Oswald:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --noir: #0a0a0a;
-    --rouge: #8b0000;
-    --rouge-vif: #cc0000;
-    --or: #c9a84c;
-    --or-clair: #e8d5a3;
-    --papier: #1a1410;
-    --gris: #2a2a2a;
-    --texte: #d4c9a8;
-    --blanc: #f0e8d0;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-  body {
-    font-family: 'Special Elite', cursive;
-    background: var(--noir);
-    color: var(--texte);
-    min-height: 100vh;
-    overflow: hidden;
-    position: relative;
-    user-select: none;
-  }
-
-  /* ===== GRAIN TEXTURE OVERLAY ===== */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 9999;
-    opacity: 0.4;
-  }
-
-  /* ===== SCREENS ===== */
-  .screen {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.6s ease;
-    overflow-y: auto;
-  }
-  .screen.active {
-    opacity: 1;
-    pointer-events: all;
-  }
-
-  /* ===== BACKGROUND LAYERS ===== */
-  #bg-day {
-    position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(ellipse at 50% -20%, #1a0a00 0%, transparent 60%),
-      linear-gradient(180deg, #1a0d00 0%, #0a0a0a 100%);
-    z-index: -2;
-    transition: opacity 1.5s ease;
-  }
-  #bg-night {
-    position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(ellipse at 50% 100%, #1a0030 0%, transparent 60%),
-      linear-gradient(180deg, #000005 0%, #050010 50%, #000000 100%);
-    z-index: -1;
-    opacity: 0;
-    transition: opacity 2s ease;
-  }
-  #stars {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    opacity: 0;
-    transition: opacity 2s ease;
-  }
-
-  /* ===== SCREEN 1: ACCUEIL ===== */
-  #screen-home {
-    background: url('bg-main.png') center/cover no-repeat;
-  }
-  #screen-home::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.8) 100%);
-    pointer-events: none;
-  }
-
-  .home-content {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    width: 100%;
-  }
-
-  .logo-badge {
-    width: 90px;
-    height: 90px;
-    border: 2px solid var(--or);
-    border-radius: 50%;
-    margin: 0 auto 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 36px;
-    box-shadow: 0 0 30px rgba(201,168,76,0.3), inset 0 0 20px rgba(0,0,0,0.5);
-    animation: pulse-or 3s ease-in-out infinite;
-  }
-
-  @keyframes pulse-or {
-    0%, 100% { box-shadow: 0 0 20px rgba(201,168,76,0.3); }
-    50% { box-shadow: 0 0 40px rgba(201,168,76,0.6); }
-  }
-
-  .titre-jeu {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(38px, 10vw, 52px);
-    font-weight: 900;
-    color: var(--or);
-    letter-spacing: 4px;
-    text-shadow: 2px 2px 0 var(--rouge), 0 0 40px rgba(201,168,76,0.4);
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-
-  .sous-titre {
-    font-family: 'Oswald', sans-serif;
-    font-size: 11px;
-    letter-spacing: 6px;
-    color: var(--rouge-vif);
-    text-transform: uppercase;
-    margin-bottom: 30px;
-  }
-
-  .divider {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 16px auto;
-    width: 80%;
-  }
-  .divider::before, .divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--or), transparent);
-  }
-  .divider-icon { color: var(--or); font-size: 14px; }
-
-  .btn-primary {
-    display: block;
-    width: 100%;
-    max-width: 300px;
-    margin: 10px auto;
-    padding: 16px 30px;
-    background: linear-gradient(135deg, var(--rouge) 0%, #5a0000 100%);
-    border: 1px solid var(--or);
-    color: var(--or-clair);
-    font-family: 'Oswald', sans-serif;
-    font-size: 16px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
-  }
-  .btn-primary::before {
-    content: '';
-    position: absolute;
-    top: 0; left: -100%;
-    width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-    transition: left 0.4s ease;
-  }
-  .btn-primary:active::before { left: 100%; }
-  .btn-primary:active { transform: scale(0.97); }
-
-  .btn-secondary {
-    display: block;
-    width: 100%;
-    max-width: 300px;
-    margin: 10px auto;
-    padding: 14px 30px;
-    background: transparent;
-    border: 1px solid rgba(201,168,76,0.4);
-    color: var(--or);
-    font-family: 'Oswald', sans-serif;
-    font-size: 14px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
-  }
-  .btn-secondary:active { background: rgba(201,168,76,0.1); transform: scale(0.97); }
-
-  /* ===== SCREEN 2: CONFIG ===== */
-  #screen-config {
-    padding: 20px 20px 100px;
-    justify-content: flex-start;
-    overflow-y: auto;
-  }
-
-  .screen-header {
-    text-align: center;
-    margin-bottom: 24px;
-    padding-top: 20px;
-    width: 100%;
-  }
-
-  .screen-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 28px;
-    color: var(--or);
-    letter-spacing: 2px;
-    text-shadow: 0 0 20px rgba(201,168,76,0.3);
-  }
-
-  .screen-subtitle {
-    font-family: 'Oswald', sans-serif;
-    font-size: 11px;
-    letter-spacing: 4px;
-    color: var(--rouge-vif);
-    text-transform: uppercase;
-    margin-top: 4px;
-  }
-
-  .player-input-row {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
-    width: 100%;
-    max-width: 400px;
-    animation: slideIn 0.3s ease;
-  }
-
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateX(-20px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  .player-number {
-    width: 36px;
-    height: 46px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Oswald', sans-serif;
-    color: var(--or);
-    font-size: 18px;
-    font-weight: 600;
-    flex-shrink: 0;
-  }
-
-  input[type="text"] {
-    flex: 1;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(201,168,76,0.3);
-    border-bottom: 2px solid var(--or);
-    color: var(--texte);
-    font-family: 'Special Elite', cursive;
-    font-size: 15px;
-    padding: 12px 14px;
-    outline: none;
-    transition: all 0.3s ease;
-    -webkit-appearance: none;
-  }
-  input[type="text"]:focus {
-    border-color: var(--or);
-    background: rgba(201,168,76,0.05);
-    box-shadow: 0 4px 15px rgba(201,168,76,0.1);
-  }
-  input[type="text"]::placeholder { color: rgba(212,201,168,0.3); }
-
-  .btn-remove {
-    width: 46px;
-    height: 46px;
-    background: rgba(139,0,0,0.3);
-    border: 1px solid rgba(139,0,0,0.5);
-    color: var(--rouge-vif);
-    font-size: 20px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: all 0.2s;
-  }
-  .btn-remove:active { background: rgba(139,0,0,0.6); }
-
-  .btn-add {
-    width: 100%;
-    max-width: 400px;
-    padding: 14px;
-    background: rgba(201,168,76,0.08);
-    border: 1px dashed rgba(201,168,76,0.4);
-    color: var(--or);
-    font-family: 'Oswald', sans-serif;
-    font-size: 13px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    cursor: pointer;
-    margin: 8px 0;
-    transition: all 0.3s;
-  }
-  .btn-add:active { background: rgba(201,168,76,0.15); }
-
-  .roles-info {
-    width: 100%;
-    max-width: 400px;
-    margin: 16px 0;
-    padding: 14px;
-    background: rgba(139,0,0,0.1);
-    border-left: 3px solid var(--rouge);
-  }
-
-  .roles-info p {
-    font-family: 'Oswald', sans-serif;
-    font-size: 12px;
-    letter-spacing: 1px;
-    color: var(--texte);
-    opacity: 0.8;
-    line-height: 1.8;
-  }
-
-  .roles-info strong { color: var(--or); }
-
-  .bottom-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 16px 20px;
-    background: linear-gradient(transparent, var(--noir) 40%);
-    z-index: 10;
-  }
-
-  /* ===== SCREEN 3: DISTRIBUTION ===== */
-  #screen-reveal {
-    background: url('bg-main.png') center/cover no-repeat;
-    justify-content: flex-start;
-    padding: 0 24px 120px;
-    overflow-y: auto;
-  }
-  #screen-reveal::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.75);
-    pointer-events: none;
-  }
-
-  .reveal-content {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    text-align: center;
-    padding-top: 20px;
-  }
-
-  .dossier-card {
-    width: 100%;
-    max-width: 360px;
-    margin: 0 auto;
-    background: linear-gradient(135deg, #1a1208 0%, #0d0d0d 100%);
-    border: 1px solid rgba(201,168,76,0.4);
-    padding: 0;
-    overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(201,168,76,0.1);
-    position: relative;
-  }
-
-  .dossier-card::before {
-    content: 'CONFIDENTIEL';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(-25deg);
-    font-family: 'Oswald', sans-serif;
-    font-size: 32px;
-    font-weight: 600;
-    letter-spacing: 6px;
-    color: rgba(139,0,0,0.15);
-    pointer-events: none;
-    z-index: 2;
-    white-space: nowrap;
-  }
-
-  .card-header {
-    background: linear-gradient(135deg, var(--rouge) 0%, #3a0000 100%);
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--or);
-  }
-
-  .card-header span {
-    font-family: 'Oswald', sans-serif;
-    font-size: 10px;
-    letter-spacing: 3px;
-    color: var(--or-clair);
-    text-transform: uppercase;
-  }
-
-  .role-image-zone {
-    height: 160px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .role-image-zone img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0.85;
-    filter: contrast(1.1) saturate(0.7);
-  }
-
-  .role-emoji-fallback {
-    font-size: 80px;
-    text-align: center;
-  }
-
-  .role-image-zone::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 50%;
-    background: linear-gradient(transparent, #1a1208);
-  }
-
-  .card-body {
-    padding: 16px;
-  }
-
-  .role-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 26px;
-    font-weight: 900;
-    text-align: center;
-    margin-bottom: 8px;
-    letter-spacing: 2px;
-  }
-
-  .role-name.mafia { color: var(--rouge-vif); text-shadow: 0 0 20px rgba(204,0,0,0.5); }
-  .role-name.police { color: #4a9eff; text-shadow: 0 0 20px rgba(74,158,255,0.3); }
-  .role-name.undercover { color: var(--or); text-shadow: 0 0 20px rgba(201,168,76,0.5); }
-
-  .role-desc {
-    font-size: 12px;
-    line-height: 1.7;
-    color: var(--texte);
-    opacity: 0.8;
-    text-align: center;
-    padding: 0 8px;
-    margin-bottom: 14px;
-  }
-
-  .role-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    font-family: 'Oswald', sans-serif;
-    font-size: 10px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    border: 1px solid;
-    margin: 0 auto 14px;
-  }
-  .role-badge.mafia { border-color: var(--rouge); color: var(--rouge-vif); background: rgba(139,0,0,0.15); }
-  .role-badge.police { border-color: #1a4a8a; color: #4a9eff; background: rgba(26,74,138,0.15); }
-  .role-badge.undercover { border-color: var(--or); color: var(--or); background: rgba(201,168,76,0.1); }
-
-  .card-footer {
-    padding: 12px 16px;
-    background: rgba(0,0,0,0.3);
-    border-top: 1px solid rgba(201,168,76,0.2);
-    text-align: center;
-  }
-
-  .player-name-reveal {
-    font-family: 'Playfair Display', serif;
-    font-size: 20px;
-    color: var(--or);
-    font-style: italic;
-  }
-
-  /* Flip card mechanic */
-  .flip-zone {
-    perspective: 1000px;
-    width: 100%;
-    max-width: 360px;
-    margin: 0 auto;
-  }
-
-  .flip-inner {
-    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-    transform-style: preserve-3d;
-    position: relative;
-    min-height: 440px;
-  }
-
-  .flip-inner.flipped { transform: rotateY(180deg); }
-
-  .flip-front, .flip-back {
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-  }
-
-  .flip-back {
-    position: absolute;
-    inset: 0;
-    transform: rotateY(180deg);
-    height: 100%;
-  }
-
-  .dossier-back {
-    width: 100%;
-    height: 100%;
-    min-height: 300px;
-    background: linear-gradient(135deg, #1a0808 0%, #0d0d0d 100%);
-    border: 1px solid rgba(201,168,76,0.4);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-  }
-
-  .dossier-back .lock-icon { font-size: 48px; opacity: 0.6; }
-  .dossier-back p {
-    font-family: 'Oswald', sans-serif;
-    font-size: 12px;
-    letter-spacing: 3px;
-    color: var(--or);
-    text-align: center;
-    padding: 0 20px;
-    opacity: 0.7;
-    text-transform: uppercase;
-  }
-
-  .reveal-instruction {
-    font-family: 'Oswald', sans-serif;
-    font-size: 13px;
-    letter-spacing: 2px;
-    color: rgba(212,201,168,0.6);
-    text-align: center;
-    margin-top: 12px;
-    text-transform: uppercase;
-  }
-
-  /* ===== SCREEN 4: NUIT ===== */
-  #screen-night {
-    background: url('bg-night.jpg') center/cover no-repeat;
-  }
-  #screen-night::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    pointer-events: none;
-  }
-
-  .night-content {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    text-align: center;
-    max-width: 400px;
-  }
-
-  /* Orbe pulsante voix off */
-  .voice-orb {
-    width: 140px;
-    height: 140px;
-    margin: 0 auto 24px;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .orb-core {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, #6a0080, #2a003a);
-    box-shadow: 0 0 30px rgba(138,0,200,0.6);
-    position: relative;
-    z-index: 3;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    transition: all 0.3s ease;
-  }
-
-  .orb-ring {
-    position: absolute;
-    border-radius: 50%;
-    border: 1px solid rgba(138,0,200,0.4);
-    animation: orbRing 2s ease-out infinite;
-    opacity: 0;
-  }
-
-  .orb-ring:nth-child(1) { width: 90px; height: 90px; animation-delay: 0s; }
-  .orb-ring:nth-child(2) { width: 115px; height: 115px; animation-delay: 0.6s; }
-  .orb-ring:nth-child(3) { width: 140px; height: 140px; animation-delay: 1.2s; }
-
-  @keyframes orbRing {
-    0% { opacity: 0.6; transform: scale(0.8); }
-    100% { opacity: 0; transform: scale(1.1); }
-  }
-
-  .orb-core.speaking {
-    animation: orbPulse 0.5s ease-in-out infinite alternate;
-    box-shadow: 0 0 50px rgba(138,0,200,0.9);
-  }
-
-  @keyframes orbPulse {
-    from { transform: scale(1); box-shadow: 0 0 30px rgba(138,0,200,0.6); }
-    to { transform: scale(1.1); box-shadow: 0 0 60px rgba(200,0,255,1); }
-  }
-
-  .night-step-text {
-    font-family: 'Playfair Display', serif;
-    font-size: 20px;
-    color: var(--blanc);
-    min-height: 60px;
-    line-height: 1.4;
-    margin-bottom: 20px;
-    font-style: italic;
-    text-shadow: 0 0 20px rgba(138,0,200,0.5);
-    transition: opacity 0.5s ease;
-  }
-
-  .night-progress {
-    display: flex;
-    gap: 6px;
-    justify-content: center;
-    margin-bottom: 24px;
-  }
-
-  .progress-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: rgba(201,168,76,0.2);
-    border: 1px solid rgba(201,168,76,0.4);
-    transition: all 0.3s ease;
-  }
-  .progress-dot.done { background: var(--or); box-shadow: 0 0 8px rgba(201,168,76,0.6); }
-  .progress-dot.active { background: rgba(201,168,76,0.6); animation: dotPulse 1s ease-in-out infinite; }
-
-  @keyframes dotPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.3); }
-  }
-
-  .btn-night-next {
-    width: 100%;
-    max-width: 280px;
-    padding: 16px;
-    background: linear-gradient(135deg, rgba(138,0,200,0.4) 0%, rgba(80,0,120,0.4) 100%);
-    border: 1px solid rgba(138,0,200,0.6);
-    color: var(--blanc);
-    font-family: 'Oswald', sans-serif;
-    font-size: 14px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
-  }
-  .btn-night-next:active { transform: scale(0.97); background: rgba(138,0,200,0.6); }
-  .btn-night-next:disabled { opacity: 0.4; }
-
-  /* ===== SCREEN 5: JOUR ===== */
-  #screen-day {
-    justify-content: flex-start;
-    padding: 0;
-    overflow-y: auto;
-  }
-
-  .day-header {
-    width: 100%;
-    padding: 50px 24px 20px;
-    background: linear-gradient(180deg, rgba(100,40,0,0.7) 0%, transparent 100%);
-    text-align: center;
-    position: relative;
-    flex-shrink: 0;
-  }
-
-  .sun-icon {
-    font-size: 36px;
-    animation: sunSpin 20s linear infinite;
-    display: block;
-    margin-bottom: 6px;
-    filter: drop-shadow(0 0 16px rgba(255,180,0,0.8));
-  }
-
-  @keyframes sunSpin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-
-  .day-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 30px;
-    color: #ffaa44;
-    text-shadow: 0 0 30px rgba(255,140,0,0.6);
-    letter-spacing: 3px;
-  }
-
-  /* Chronomètre */
-  .timer-zone {
-    width: 100%;
-    padding: 16px 24px 8px;
-    text-align: center;
-    flex-shrink: 0;
-  }
-
-  .timer-display {
-    font-family: 'Oswald', sans-serif;
-    font-size: 80px;
-    font-weight: 600;
-    color: var(--or);
-    letter-spacing: 4px;
-    text-shadow: 0 0 30px rgba(201,168,76,0.4);
-    line-height: 1;
-    margin-bottom: 4px;
-    transition: color 0.3s;
-  }
-
-  .timer-display.urgent { color: var(--rouge-vif); animation: timerUrgent 0.5s ease-in-out infinite; }
-
-  @keyframes timerUrgent {
-    0%, 100% { text-shadow: 0 0 20px rgba(204,0,0,0.4); }
-    50% { text-shadow: 0 0 40px rgba(204,0,0,0.9); }
-  }
-
-  .timer-label {
-    font-family: 'Oswald', sans-serif;
-    font-size: 10px;
-    letter-spacing: 5px;
-    color: rgba(212,201,168,0.4);
-    text-transform: uppercase;
-  }
-
-  .timer-controls {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 12px;
-  }
-
-  .btn-timer {
-    padding: 10px 20px;
-    font-family: 'Oswald', sans-serif;
-    font-size: 12px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    cursor: pointer;
-    border: 1px solid;
-    transition: all 0.2s;
-    background: transparent;
-    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
-  }
-  .btn-timer.pause { border-color: var(--or); color: var(--or); }
-  .btn-timer.add { border-color: rgba(212,201,168,0.35); color: var(--texte); }
-  .btn-timer:active { opacity: 0.7; transform: scale(0.96); }
-
-  /* Divider débat */
-  .day-divider {
-    width: calc(100% - 48px);
-    margin: 12px 24px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent);
-    flex-shrink: 0;
-  }
-
-  /* Liste suspects - vote unique */
-  .suspects-zone {
-    width: 100%;
-    padding: 0 20px 100px;
-    flex: 1;
-    overflow-y: auto;
-  }
-
-  .suspects-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(201,168,76,0.2);
-  }
-
-  .suspects-title {
-    font-family: 'Oswald', sans-serif;
-    font-size: 10px;
-    letter-spacing: 4px;
-    color: rgba(212,201,168,0.4);
-    text-transform: uppercase;
-  }
-
-  .vote-hint {
-    font-family: 'Oswald', sans-serif;
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: rgba(201,168,76,0.5);
-    text-transform: uppercase;
-  }
-
-  .suspect-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 14px 16px;
-    margin-bottom: 8px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(201,168,76,0.15);
-    border-left: 3px solid rgba(201,168,76,0.35);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    cursor: pointer;
-  }
-  .suspect-item:active { background: rgba(201,168,76,0.06); transform: scale(0.98); }
-
-  .suspect-item.voted {
-    border-left-color: var(--rouge-vif);
-    background: rgba(139,0,0,0.12);
-    box-shadow: inset 0 0 20px rgba(139,0,0,0.1);
-  }
-
-  .suspect-item.eliminated {
-    opacity: 0.35;
-    border-left-color: rgba(139,0,0,0.4);
-    background: rgba(139,0,0,0.05);
-    cursor: default;
-    pointer-events: none;
-  }
-
-  .suspect-item.eliminated::after {
-    content: '';
-    position: absolute;
-    top: 50%; left: 0; right: 0;
-    height: 1px;
-    background: rgba(204,0,0,0.5);
-  }
-
-  .suspect-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--rouge) 0%, #3a0000 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Oswald', sans-serif;
-    font-size: 17px;
-    font-weight: 600;
-    color: var(--or);
-    border: 1px solid rgba(201,168,76,0.3);
-    flex-shrink: 0;
-  }
-
-  .suspect-name {
-    flex: 1;
-    font-size: 17px;
-    color: var(--texte);
-    font-family: 'Special Elite', cursive;
-  }
-
-  .suspect-vote-icon {
-    font-size: 20px;
-    opacity: 0.3;
-    transition: all 0.3s;
-  }
-  .suspect-item.voted .suspect-vote-icon { opacity: 1; }
-
-  .suspect-elim-badge {
-    font-family: 'Oswald', sans-serif;
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: rgba(204,0,0,0.6);
-    text-transform: uppercase;
-  }
-
-  /* Bottom bar jour */
-  .day-bottom {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    padding: 12px 20px 24px;
-    background: linear-gradient(transparent, rgba(0,0,0,0.95) 40%);
-    z-index: 10;
-    display: flex;
-    gap: 10px;
-  }
-
-  /* ===== VOTE REVEAL OVERLAY ===== */
-  #vote-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 5000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,0.88);
-    padding: 20px 20px 100px;
-    overflow-y: auto;
-  }
-  #vote-overlay.visible { display: flex; }
-
-  .vote-reveal-content {
-    width: 100%;
-    max-width: 340px;
-    text-align: center;
-  }
-
-  .vote-reveal-label {
-    font-family: 'Oswald', sans-serif;
-    font-size: 10px;
-    letter-spacing: 5px;
-    color: var(--rouge-vif);
-    text-transform: uppercase;
-    margin-bottom: 16px;
-  }
-
-  .vote-bottom {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    padding: 16px 20px 28px;
-    background: linear-gradient(transparent, rgba(0,0,0,0.95) 40%);
-    z-index: 5001;
-    display: flex;
-    gap: 10px;
-  }
-
-  /* ===== RÈGLES ===== */
-  #screen-rules {
-    padding: 20px 20px 80px;
-    justify-content: flex-start;
-    overflow-y: auto;
-  }
-
-  .rules-content {
-    max-width: 400px;
-    width: 100%;
-    padding-top: 20px;
-  }
-
-  .rule-block {
-    margin-bottom: 20px;
-    padding: 16px;
-    border-left: 3px solid var(--rouge);
-    background: rgba(255,255,255,0.02);
-  }
-
-  .rule-block h3 {
-    font-family: 'Oswald', sans-serif;
-    font-size: 13px;
-    letter-spacing: 3px;
-    color: var(--or);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  .rule-block p {
-    font-size: 13px;
-    line-height: 1.8;
-    color: rgba(212,201,168,0.75);
-  }
-
-  /* ===== TOAST ===== */
-  .toast {
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: linear-gradient(135deg, var(--rouge) 0%, #3a0000 100%);
-    border: 1px solid var(--or);
-    color: var(--or-clair);
-    padding: 12px 24px;
-    font-family: 'Oswald', sans-serif;
-    font-size: 13px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    z-index: 10000;
-    white-space: nowrap;
-    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
-  }
-  .toast.show { transform: translateX(-50%) translateY(0); }
-
-  /* ===== FIN DE PARTIE ===== */
-  #screen-end {
-    text-align: center;
-  }
-  .end-content { max-width: 360px; }
-  .end-icon { font-size: 64px; margin-bottom: 16px; display: block; }
-  .end-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 32px;
-    color: var(--or);
-    font-style: italic;
-    margin-bottom: 8px;
-  }
-  .end-subtitle {
-    font-family: 'Oswald', sans-serif;
-    font-size: 12px;
-    letter-spacing: 4px;
-    color: var(--rouge-vif);
-    text-transform: uppercase;
-    margin-bottom: 24px;
-  }
-  .end-stats {
-    margin-bottom: 24px;
-    padding: 16px;
-    border: 1px solid rgba(201,168,76,0.2);
-    background: rgba(0,0,0,0.3);
-    text-align: left;
-  }
-  .end-stats p {
-    font-size: 13px;
-    padding: 6px 0;
-    border-bottom: 1px solid rgba(201,168,76,0.1);
-    display: flex;
-    justify-content: space-between;
-  }
-  .end-stats p:last-child { border: none; }
-  .end-stats span { color: var(--or); }
-
-  /* ===== AUDIO INDICATOR ===== */
-  .audio-status {
-    position: fixed;
-    top: 12px;
-    right: 12px;
-    z-index: 100;
-    display: flex;
-    gap: 4px;
-    align-items: center;
-    padding: 6px 10px;
-    background: rgba(0,0,0,0.6);
-    border: 1px solid rgba(201,168,76,0.2);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .audio-status span { font-size: 16px; }
-  .audio-status small {
-    font-family: 'Oswald', sans-serif;
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: rgba(212,201,168,0.5);
-    text-transform: uppercase;
-  }
-
-  /* ===== ANIMATIONS ===== */
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .fade-in { animation: fadeInUp 0.5s ease forwards; }
-
-  /* Étoiles */
-  .star {
-    position: fixed;
-    border-radius: 50%;
-    background: white;
-    animation: twinkle var(--dur, 3s) ease-in-out infinite;
-  }
-  @keyframes twinkle {
-    0%, 100% { opacity: var(--base-op, 0.3); }
-    50% { opacity: 0.9; }
-  }
-
-  /* Loading overlay */
-  #loading-overlay {
-    position: fixed;
-    inset: 0;
-    background: url('bg-main.png') center/cover no-repeat;
-    z-index: 99999;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0;
-    transition: opacity 1s ease;
-    overflow: hidden;
-  }
-  #loading-overlay::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.92) 100%);
-  }
-  #loading-overlay.hide { opacity: 0; pointer-events: none; }
-
-  .loading-inner {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0;
-    animation: fadeInUp 0.8s ease both;
-  }
-
-  .loading-icon-ring {
-    width: 100px;
-    height: 100px;
-    border: 1px solid rgba(201,168,76,0.5);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 22px;
-    box-shadow: 0 0 40px rgba(201,168,76,0.15), inset 0 0 30px rgba(0,0,0,0.6);
-    animation: pulse-or 2.5s ease-in-out infinite;
-    position: relative;
-  }
-  .loading-icon-ring::before {
-    content: '';
-    position: absolute;
-    inset: 6px;
-    border-radius: 50%;
-    border: 1px solid rgba(201,168,76,0.2);
-  }
-  .loading-icon-ring img {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 50%;
-    filter: drop-shadow(0 0 8px rgba(201,168,76,0.4));
-  }
-  .loading-icon-ring .icon-emoji {
-    font-size: 36px;
-    filter: drop-shadow(0 0 8px rgba(201,168,76,0.4));
-  }
-
-  .loading-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 44px;
-    font-weight: 900;
-    color: var(--or);
-    letter-spacing: 5px;
-    text-shadow: 2px 2px 0 var(--rouge), 0 0 50px rgba(201,168,76,0.5);
-    margin-bottom: 4px;
-    line-height: 1;
-  }
-
-  .loading-subtitle {
-    font-family: 'Oswald', sans-serif;
-    font-size: 10px;
-    letter-spacing: 7px;
-    color: var(--rouge-vif);
-    text-transform: uppercase;
-    margin-bottom: 36px;
-  }
-
-  .loading-divider {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 200px;
-    margin-bottom: 28px;
-  }
-  .loading-divider::before, .loading-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--or), transparent);
-  }
-  .loading-divider span { color: var(--or); font-size: 10px; }
-
-  .loading-bar-container {
-    width: 180px;
-    height: 1px;
-    background: rgba(201,168,76,0.15);
-    overflow: hidden;
-    margin-bottom: 14px;
-  }
-
-  .loading-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--rouge), var(--or));
-    animation: loadBar 2s ease-in-out forwards;
-    box-shadow: 0 0 8px rgba(201,168,76,0.6);
-  }
-
-  @keyframes loadBar {
-    0% { width: 0; }
-    30% { width: 45%; }
-    70% { width: 75%; }
-    100% { width: 100%; }
-  }
-
-  .loading-text {
-    font-family: 'Oswald', sans-serif;
-    font-size: 9px;
-    letter-spacing: 5px;
-    color: rgba(201,168,76,0.35);
-    text-transform: uppercase;
-  }
-
-  /* ===== SCROLLBAR ===== */
-  ::-webkit-scrollbar { width: 3px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--rouge); }
+:root {
+  --noir: #0a0a0a;
+  --rouge: #8b0000;
+  --rouge-vif: #cc0000;
+  --or: #c9a84c;
+  --or-clair: #e8d5a3;
+  --texte: #d4c9a8;
+  --blanc: #f0e8d0;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--noir);
+  font-family: 'Special Elite', cursive;
+  color: var(--texte);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* grain */
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:9998;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity:0.5;
+}
+
+/* ── SCREENS ── */
+.screen {
+  position:fixed; inset:0;
+  display:flex; flex-direction:column; align-items:center;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.5s ease;
+  overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+}
+.screen.active { opacity:1; pointer-events:all; }
+
+/* ── BG LAYERS ── */
+#bg-day {
+  position:fixed; inset:0; z-index:-2;
+  background: linear-gradient(180deg,#1a0d00 0%,#0a0a0a 100%);
+}
+#bg-night {
+  position:fixed; inset:0; z-index:-1; opacity:0;
+  background: linear-gradient(180deg,#000005 0%,#050010 50%,#000 100%);
+  transition:opacity 2s ease;
+}
+#stars { position:fixed; inset:0; z-index:-1; opacity:0; transition:opacity 2s ease; }
+
+/* ── LOADING ── */
+#loading-overlay {
+  position:fixed; inset:0; z-index:99999;
+  background:url('bg-main.png') center/cover no-repeat;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:0; transition:opacity 1s ease; overflow:hidden;
+}
+#loading-overlay::before {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse at center,rgba(0,0,0,0.45) 0%,rgba(0,0,0,0.9) 100%);
+}
+#loading-overlay.hide { opacity:0; pointer-events:none; }
+
+.ld-inner {
+  position:relative; z-index:1;
+  display:flex; flex-direction:column; align-items:center;
+  animation:fadeInUp 0.8s ease both;
+}
+.ld-ring {
+  width:96px; height:96px;
+  border:1.5px solid rgba(201,168,76,0.6); border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom:20px;
+  box-shadow:0 0 40px rgba(201,168,76,0.15);
+  animation:pulseOr 2.5s ease-in-out infinite;
+  overflow:hidden;
+}
+.ld-ring img { width:96px; height:96px; object-fit:cover; border-radius:50%; }
+.ld-title {
+  font-family:'Playfair Display',serif; font-size:42px; font-weight:900;
+  color:var(--or); letter-spacing:5px;
+  text-shadow:2px 2px 0 var(--rouge),0 0 50px rgba(201,168,76,0.5);
+  margin-bottom:4px;
+}
+.ld-sub {
+  font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:7px;
+  color:var(--rouge-vif); text-transform:uppercase; margin-bottom:32px;
+}
+.ld-bar-wrap { width:180px; height:1px; background:rgba(201,168,76,0.15); margin-bottom:14px; overflow:hidden; }
+.ld-bar { height:100%; background:linear-gradient(90deg,var(--rouge),var(--or)); animation:loadBar 2.2s ease forwards; }
+.ld-hint { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:5px; color:rgba(201,168,76,0.3); text-transform:uppercase; }
+
+@keyframes loadBar { 0%{width:0} 30%{width:40%} 70%{width:72%} 100%{width:100%} }
+@keyframes pulseOr { 0%,100%{box-shadow:0 0 20px rgba(201,168,76,0.2)} 50%{box-shadow:0 0 40px rgba(201,168,76,0.55)} }
+@keyframes fadeInUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── AUDIO BTN ── */
+.audio-btn {
+  position:fixed; top:calc(12px + var(--safe-top)); right:12px; z-index:1000;
+  display:flex; align-items:center; gap:4px;
+  padding:7px 11px;
+  background:rgba(0,0,0,0.65); border:1px solid rgba(201,168,76,0.25);
+  cursor:pointer; transition:all 0.2s;
+}
+.audio-btn span { font-size:15px; }
+.audio-btn small { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:rgba(212,201,168,0.45); text-transform:uppercase; }
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; bottom:30px; left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:linear-gradient(135deg,var(--rouge),#3a0000);
+  border:1px solid var(--or); color:var(--or-clair);
+  padding:11px 22px;
+  font-family:'Oswald',sans-serif; font-size:13px; letter-spacing:2px; text-transform:uppercase;
+  transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  z-index:10001; white-space:nowrap;
+  clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+}
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+/* ── SHARED BUTTONS ── */
+.btn-p {
+  display:block; width:100%; padding:16px 30px;
+  background:linear-gradient(135deg,var(--rouge),#5a0000);
+  border:1px solid var(--or); color:var(--or-clair);
+  font-family:'Oswald',sans-serif; font-size:15px; letter-spacing:3px; text-transform:uppercase;
+  cursor:pointer; position:relative; overflow:hidden; transition:all 0.2s;
+  clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+}
+.btn-p:active { transform:scale(0.97); opacity:0.85; }
+.btn-s {
+  display:block; width:100%; padding:14px 30px;
+  background:transparent; border:1px solid rgba(201,168,76,0.4); color:var(--or);
+  font-family:'Oswald',sans-serif; font-size:14px; letter-spacing:3px; text-transform:uppercase;
+  cursor:pointer; transition:all 0.2s;
+  clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+}
+.btn-s:active { background:rgba(201,168,76,0.08); transform:scale(0.97); }
+
+/* ── HOME ── */
+#screen-home { background:url('bg-main.png') center/cover no-repeat; justify-content:center; }
+#screen-home::after {
+  content:''; position:fixed; inset:0; pointer-events:none;
+  background:radial-gradient(ellipse at center,rgba(0,0,0,0.25) 0%,rgba(0,0,0,0.8) 100%);
+}
+.home-inner { position:relative; z-index:1; text-align:center; width:100%; padding:0 32px; }
+.logo-ring {
+  width:88px; height:88px; border:2px solid var(--or); border-radius:50%;
+  margin:0 auto 16px; display:flex; align-items:center; justify-content:center;
+  animation:pulseOr 3s ease-in-out infinite; overflow:hidden;
+  box-shadow:0 0 30px rgba(201,168,76,0.25);
+}
+.logo-ring img { width:88px; height:88px; object-fit:cover; border-radius:50%; }
+.home-title {
+  font-family:'Playfair Display',serif; font-size:clamp(36px,11vw,52px); font-weight:900;
+  color:var(--or); letter-spacing:4px; line-height:1; margin-bottom:4px;
+  text-shadow:2px 2px 0 var(--rouge),0 0 40px rgba(201,168,76,0.35);
+}
+.home-sub {
+  font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:6px;
+  color:var(--rouge-vif); text-transform:uppercase; margin-bottom:28px;
+}
+.divider { display:flex; align-items:center; gap:12px; margin:0 auto 24px; width:70%; }
+.divider::before,.divider::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,transparent,var(--or),transparent); }
+.divider span { color:var(--or); font-size:12px; }
+.home-hint { margin-top:28px; font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:3px; color:rgba(212,201,168,0.25); }
+
+/* ── CONFIG ── */
+#screen-config { justify-content:flex-start; padding:0 20px calc(90px + var(--safe-bot)); }
+.screen-hd { text-align:center; padding:calc(20px + var(--safe-top)) 0 20px; width:100%; }
+.screen-title { font-family:'Playfair Display',serif; font-size:28px; color:var(--or); letter-spacing:2px; }
+.screen-sub { font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:4px; color:var(--rouge-vif); text-transform:uppercase; margin-top:4px; }
+
+.player-row { display:flex; gap:10px; margin-bottom:10px; width:100%; max-width:420px; animation:slideIn 0.3s ease; }
+@keyframes slideIn { from{opacity:0;transform:translateX(-16px)} to{opacity:1;transform:translateX(0)} }
+.pnum { width:32px; display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; color:var(--or); font-size:17px; font-weight:600; flex-shrink:0; }
+
+input[type="text"] {
+  flex:1; background:rgba(255,255,255,0.04); border:none; border-bottom:2px solid rgba(201,168,76,0.4);
+  color:var(--texte); font-family:'Special Elite',cursive; font-size:16px; padding:12px 10px;
+  outline:none; transition:all 0.3s; -webkit-appearance:none; border-radius:0;
+}
+input[type="text"]:focus { border-bottom-color:var(--or); background:rgba(201,168,76,0.04); }
+input[type="text"]::placeholder { color:rgba(212,201,168,0.25); }
+
+.btn-rm {
+  width:44px; height:48px; flex-shrink:0; background:rgba(139,0,0,0.25);
+  border:1px solid rgba(139,0,0,0.45); color:var(--rouge-vif); font-size:20px;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+.btn-rm:active { background:rgba(139,0,0,0.55); }
+.btn-add {
+  width:100%; max-width:420px; padding:13px;
+  background:rgba(201,168,76,0.06); border:1px dashed rgba(201,168,76,0.35); color:var(--or);
+  font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:3px; text-transform:uppercase;
+  cursor:pointer; margin:6px 0;
+}
+.btn-add:active { background:rgba(201,168,76,0.12); }
+.roles-box {
+  width:100%; max-width:420px; margin:12px 0; padding:13px;
+  background:rgba(139,0,0,0.08); border-left:3px solid var(--rouge);
+  font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:1px; line-height:1.8; color:var(--texte);
+}
+.roles-box strong { color:var(--or); }
+
+.bottom-bar {
+  position:fixed; bottom:0; left:0; right:0;
+  padding:14px 20px calc(14px + var(--safe-bot));
+  background:linear-gradient(transparent,var(--noir) 35%); z-index:10;
+  display:flex; gap:10px;
+}
+
+/* ── REVEAL ── */
+#screen-reveal { background:url('bg-main.png') center/cover no-repeat; justify-content:flex-start; padding:0 20px calc(100px + var(--safe-bot)); }
+#screen-reveal::after { content:''; position:fixed; inset:0; background:rgba(0,0,0,0.76); pointer-events:none; }
+.reveal-wrap { position:relative; z-index:1; width:100%; text-align:center; padding-top:calc(16px + var(--safe-top)); }
+.reveal-counter { font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:3px; color:rgba(212,201,168,0.45); text-transform:uppercase; margin-bottom:14px; }
+
+/* flip */
+.flip-zone { perspective:1000px; width:100%; max-width:340px; margin:0 auto; }
+.flip-inner { transform-style:preserve-3d; transition:transform 0.7s cubic-bezier(0.4,0,0.2,1); position:relative; min-height:430px; }
+.flip-inner.flipped { transform:rotateY(180deg); }
+.flip-front,.flip-back { backface-visibility:hidden; -webkit-backface-visibility:hidden; }
+.flip-back { position:absolute; inset:0; transform:rotateY(180deg); }
+
+.card-back {
+  width:100%; height:100%; min-height:430px;
+  background:linear-gradient(135deg,#1a0808,#0d0d0d);
+  border:1px solid rgba(201,168,76,0.35);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.8);
+}
+.card-back .lock { font-size:44px; opacity:0.55; }
+.card-back p { font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:3px; color:var(--or); opacity:0.6; text-transform:uppercase; padding:0 24px; text-align:center; }
+
+.dossier {
+  width:100%; background:linear-gradient(135deg,#1a1208,#0d0d0d);
+  border:1px solid rgba(201,168,76,0.4); overflow:hidden; position:relative;
+  box-shadow:0 20px 60px rgba(0,0,0,0.8);
+}
+.dossier::before {
+  content:'CONFIDENTIEL'; position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%) rotate(-25deg);
+  font-family:'Oswald',sans-serif; font-size:30px; font-weight:600; letter-spacing:6px;
+  color:rgba(139,0,0,0.12); pointer-events:none; z-index:2; white-space:nowrap;
+}
+.dossier-head {
+  background:linear-gradient(135deg,var(--rouge),#3a0000); padding:11px 16px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid var(--or);
+}
+.dossier-head span { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:3px; color:var(--or-clair); text-transform:uppercase; }
+.role-img { height:155px; display:flex; align-items:center; justify-content:center; overflow:hidden; position:relative; }
+.role-img img { width:100%; height:100%; object-fit:cover; opacity:0.85; filter:contrast(1.1) saturate(0.7); }
+.role-img .emoji { font-size:72px; }
+.role-img::after { content:''; position:absolute; bottom:0; left:0; right:0; height:50%; background:linear-gradient(transparent,#1a1208); }
+.dossier-body { padding:16px 20px; }
+.role-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:5px 14px; font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:3px;
+  text-transform:uppercase; border:1px solid; margin-bottom:10px;
+}
+.role-badge.mafia { border-color:var(--rouge); color:var(--rouge-vif); background:rgba(139,0,0,0.12); }
+.role-badge.police { border-color:#1a4a8a; color:#4a9eff; background:rgba(26,74,138,0.12); }
+.role-badge.undercover { border-color:var(--or); color:var(--or); background:rgba(201,168,76,0.08); }
+.role-name { font-family:'Playfair Display',serif; font-size:26px; font-weight:900; letter-spacing:2px; margin-bottom:8px; }
+.role-name.mafia { color:var(--rouge-vif); text-shadow:0 0 20px rgba(204,0,0,0.4); }
+.role-name.police { color:#4a9eff; text-shadow:0 0 20px rgba(74,158,255,0.25); }
+.role-name.undercover { color:var(--or); text-shadow:0 0 20px rgba(201,168,76,0.4); }
+.role-desc { font-size:12px; line-height:1.7; color:var(--texte); opacity:0.75; margin-bottom:0; }
+.dossier-foot { padding:12px 20px; background:rgba(0,0,0,0.3); border-top:1px solid rgba(201,168,76,0.18); text-align:center; }
+.player-nm { font-family:'Playfair Display',serif; font-size:20px; color:var(--or); font-style:italic; }
+.reveal-hint { font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:2px; color:rgba(212,201,168,0.45); text-align:center; margin-top:12px; text-transform:uppercase; }
+
+/* ── NIGHT ── */
+#screen-night { background:url('bg-night.jpg') center/cover no-repeat; justify-content:center; }
+#screen-night::after { content:''; position:fixed; inset:0; background:rgba(0,0,0,0.6); pointer-events:none; }
+.night-inner { position:relative; z-index:1; width:100%; text-align:center; padding:0 28px; max-width:400px; }
+.night-title { font-family:'Playfair Display',serif; font-size:32px; color:var(--or); letter-spacing:3px; text-shadow:0 0 20px rgba(201,168,76,0.35); }
+.night-sub { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:5px; color:rgba(138,0,200,0.75); text-transform:uppercase; margin-bottom:28px; margin-top:2px; }
+
+.orb { width:140px; height:140px; margin:0 auto 24px; position:relative; display:flex; align-items:center; justify-content:center; }
+.orb-ring { position:absolute; border-radius:50%; border:1px solid rgba(138,0,200,0.35); animation:orbRing 2s ease-out infinite; opacity:0; }
+.orb-ring:nth-child(1){width:88px;height:88px;animation-delay:0s}
+.orb-ring:nth-child(2){width:114px;height:114px;animation-delay:0.65s}
+.orb-ring:nth-child(3){width:140px;height:140px;animation-delay:1.3s}
+@keyframes orbRing { 0%{opacity:0.6;transform:scale(0.8)} 100%{opacity:0;transform:scale(1.1)} }
+.orb-core {
+  width:68px; height:68px; border-radius:50%; z-index:3;
+  background:radial-gradient(circle at 35% 35%,#6a0080,#2a003a);
+  box-shadow:0 0 28px rgba(138,0,200,0.55);
+  display:flex; align-items:center; justify-content:center; font-size:26px;
+}
+.orb-core.speaking { animation:orbPulse 0.5s ease-in-out infinite alternate; }
+@keyframes orbPulse { from{transform:scale(1);box-shadow:0 0 28px rgba(138,0,200,0.5)} to{transform:scale(1.1);box-shadow:0 0 55px rgba(200,0,255,0.9)} }
+
+.night-text {
+  font-family:'Playfair Display',serif; font-size:19px; font-style:italic;
+  color:var(--blanc); min-height:72px; line-height:1.5; margin-bottom:20px;
+  text-shadow:0 0 18px rgba(138,0,200,0.4); white-space:pre-line;
+  transition:opacity 0.5s ease;
+}
+.night-dots { display:flex; gap:6px; justify-content:center; margin-bottom:24px; }
+.ndot { width:8px; height:8px; border-radius:50%; background:rgba(201,168,76,0.18); border:1px solid rgba(201,168,76,0.35); transition:all 0.3s; }
+.ndot.done { background:var(--or); box-shadow:0 0 7px rgba(201,168,76,0.5); }
+.ndot.active { background:rgba(201,168,76,0.55); animation:dotPulse 1s ease-in-out infinite; }
+@keyframes dotPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.35)} }
+
+.btn-night {
+  display:none; width:100%; max-width:280px; margin:0 auto; padding:16px;
+  background:rgba(138,0,200,0.3); border:1px solid rgba(138,0,200,0.55); color:var(--blanc);
+  font-family:'Oswald',sans-serif; font-size:14px; letter-spacing:3px; text-transform:uppercase;
+  cursor:pointer; clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+}
+.btn-night:active { opacity:0.8; }
+
+/* ── DAY ── */
+#screen-day { justify-content:flex-start; padding:0; }
+.day-hd {
+  width:100%; padding:calc(44px + var(--safe-top)) 24px 16px;
+  background:linear-gradient(180deg,rgba(100,40,0,0.65) 0%,transparent 100%);
+  text-align:center; flex-shrink:0;
+}
+.sun { font-size:34px; display:block; margin-bottom:6px; animation:sunSpin 20s linear infinite; filter:drop-shadow(0 0 14px rgba(255,180,0,0.7)); }
+@keyframes sunSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+.day-title { font-family:'Playfair Display',serif; font-size:28px; color:#ffaa44; letter-spacing:3px; text-shadow:0 0 28px rgba(255,140,0,0.5); }
+.manche-lbl { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:4px; color:rgba(212,201,168,0.35); text-transform:uppercase; margin-top:3px; }
+
+.timer-zone { width:100%; padding:14px 24px 4px; text-align:center; flex-shrink:0; }
+.timer-num {
+  font-family:'Oswald',sans-serif; font-size:76px; font-weight:600; letter-spacing:4px;
+  color:var(--or); line-height:1; text-shadow:0 0 28px rgba(201,168,76,0.35);
+  transition:color 0.3s;
+}
+.timer-num.urgent { color:var(--rouge-vif); animation:urgentPulse 0.5s ease-in-out infinite; }
+@keyframes urgentPulse { 0%,100%{text-shadow:0 0 18px rgba(204,0,0,0.35)} 50%{text-shadow:0 0 38px rgba(204,0,0,0.85)} }
+.timer-lbl { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:5px; color:rgba(212,201,168,0.35); text-transform:uppercase; }
+.timer-ctrl { display:flex; gap:10px; justify-content:center; margin-top:10px; }
+.btn-tc {
+  padding:9px 18px; font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:2px; text-transform:uppercase;
+  cursor:pointer; border:1px solid; background:transparent;
+  clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);
+}
+.btn-tc.p { border-color:var(--or); color:var(--or); }
+.btn-tc.a { border-color:rgba(212,201,168,0.3); color:var(--texte); }
+.btn-tc:active { opacity:0.65; }
+
+.day-hr { width:calc(100% - 48px); margin:10px 24px; height:1px; background:linear-gradient(90deg,transparent,rgba(201,168,76,0.25),transparent); flex-shrink:0; }
+
+.suspects-zone { width:100%; padding:0 20px calc(90px + var(--safe-bot)); flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+.suspects-hd { display:flex; align-items:center; justify-content:space-between; padding-bottom:8px; margin-bottom:10px; border-bottom:1px solid rgba(201,168,76,0.18); }
+.suspects-lbl { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:4px; color:rgba(212,201,168,0.35); text-transform:uppercase; }
+.vote-hint-lbl { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:rgba(201,168,76,0.45); text-transform:uppercase; }
+
+.suspect-row {
+  display:flex; align-items:center; gap:13px; padding:13px 15px; margin-bottom:8px;
+  background:rgba(255,255,255,0.025); border:1px solid rgba(201,168,76,0.13);
+  border-left:3px solid rgba(201,168,76,0.32);
+  transition:all 0.25s; cursor:pointer; position:relative; overflow:hidden;
+}
+.suspect-row:active { background:rgba(201,168,76,0.05); transform:scale(0.985); }
+.suspect-row.elim { opacity:0.3; border-left-color:rgba(139,0,0,0.4); cursor:default; pointer-events:none; }
+.suspect-row.elim::after { content:''; position:absolute; top:50%; left:0; right:0; height:1px; background:rgba(204,0,0,0.45); }
+.s-avatar { width:40px; height:40px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:'Oswald',sans-serif; font-size:17px; font-weight:600; color:var(--or); background:linear-gradient(135deg,var(--rouge),#3a0000); border:1px solid rgba(201,168,76,0.28); }
+.s-name { flex:1; font-size:17px; color:var(--texte); }
+.s-icon { font-size:18px; opacity:0.25; transition:opacity 0.2s; }
+.s-elim { font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; color:rgba(204,0,0,0.5); text-transform:uppercase; }
+
+.day-bot { position:fixed; bottom:0; left:0; right:0; padding:12px 20px calc(12px + var(--safe-bot)); background:linear-gradient(transparent,rgba(0,0,0,0.95) 40%); z-index:10; }
+
+/* ── VOTE OVERLAY ── */
+#vote-overlay {
+  position:fixed; inset:0; z-index:5000;
+  background:rgba(0,0,0,0.9);
+  display:none; flex-direction:column; align-items:center;
+  padding:calc(20px + var(--safe-top)) 20px calc(100px + var(--safe-bot));
+  overflow-y:auto; -webkit-overflow-scrolling:touch;
+}
+#vote-overlay.open { display:flex; }
+.vote-lbl { font-family:'Oswald',sans-serif; font-size:10px; letter-spacing:5px; color:var(--rouge-vif); text-transform:uppercase; margin-bottom:14px; text-align:center; }
+.vote-bot { position:fixed; bottom:0; left:0; right:0; padding:14px 20px calc(14px + var(--safe-bot)); background:linear-gradient(transparent,rgba(0,0,0,0.97) 35%); z-index:5001; display:flex; gap:10px; }
+.vote-hint-text { font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:2px; color:rgba(212,201,168,0.4); text-align:center; margin-top:12px; text-transform:uppercase; }
+
+/* ── RULES ── */
+#screen-rules { justify-content:flex-start; padding:0 20px calc(80px + var(--safe-bot)); }
+.rules-content { max-width:420px; width:100%; padding-top:16px; }
+.rule-block { margin-bottom:18px; padding:15px; border-left:3px solid var(--rouge); background:rgba(255,255,255,0.018); }
+.rule-block h3 { font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:3px; color:var(--or); text-transform:uppercase; margin-bottom:7px; }
+.rule-block p { font-size:13px; line-height:1.8; color:rgba(212,201,168,0.7); }
+
+/* ── END ── */
+#screen-end { justify-content:center; text-align:center; padding:20px; }
+.end-inner { max-width:360px; width:100%; }
+.end-icon { font-size:58px; margin-bottom:14px; display:block; }
+.end-title { font-family:'Playfair Display',serif; font-size:30px; color:var(--or); font-style:italic; margin-bottom:6px; }
+.end-sub { font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:4px; color:var(--rouge-vif); text-transform:uppercase; margin-bottom:22px; }
+.end-stats { margin-bottom:22px; padding:14px; border:1px solid rgba(201,168,76,0.18); background:rgba(0,0,0,0.3); text-align:left; }
+.end-stats p { font-size:13px; padding:5px 0; border-bottom:1px solid rgba(201,168,76,0.08); display:flex; justify-content:space-between; }
+.end-stats p:last-child { border:none; }
+.end-stats span { color:var(--or); }
+
+/* scrollbar */
+::-webkit-scrollbar { width:3px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--rouge); }
 </style>
 </head>
 <body>
 
 <!-- LOADING -->
 <div id="loading-overlay">
-  <div class="loading-inner">
-    <div class="loading-icon-ring">
-      <img src="icon.jpg" alt="La Famiglia" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-      <span class="icon-emoji" style="display:none">🔫</span>
+  <div class="ld-inner">
+    <div class="ld-ring">
+      <img src="icon.jpg" alt="" onerror="this.outerHTML='<span style=font-size:44px>🔫</span>'">
     </div>
-    <div class="loading-title">LA FAMIGLIA</div>
-    <div class="loading-subtitle">Jeu de rôles — Mafia</div>
-    <div class="loading-divider"><span>◆</span></div>
-    <div class="loading-bar-container"><div class="loading-bar"></div></div>
-    <div class="loading-text">Préparation en cours...</div>
+    <div class="ld-title">LA FAMIGLIA</div>
+    <div class="ld-sub">Jeu de rôles — Mafia</div>
+    <div class="ld-bar-wrap"><div class="ld-bar"></div></div>
+    <div class="ld-hint">Préparation en cours...</div>
   </div>
 </div>
 
-<!-- BACKGROUNDS -->
+<!-- BG -->
 <div id="bg-day"></div>
 <div id="bg-night"></div>
 <canvas id="stars"></canvas>
 
-<!-- AUDIO STATUS -->
-<div class="audio-status" id="audio-toggle" onclick="toggleAudio()">
+<!-- AUDIO BTN -->
+<div class="audio-btn" onclick="toggleAudio()">
   <span id="audio-icon">🔊</span>
-  <small id="audio-label">SON</small>
+  <small id="audio-lbl">SON</small>
 </div>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- ========== SCREEN: ACCUEIL ========== -->
+<!-- ══════════ HOME ══════════ -->
 <div class="screen" id="screen-home">
-  <div class="home-content fade-in">
-    <div class="logo-badge">
-      <img src="icon.jpg" alt="La Famiglia" style="width:62px;height:62px;object-fit:contain;border-radius:50%;filter:drop-shadow(0 0 8px rgba(201,168,76,0.5));" onerror="this.style.display='none';this.insertAdjacentText('afterend','🔫')">
+  <div class="home-inner">
+    <div class="logo-ring">
+      <img src="icon.jpg" alt="" onerror="this.outerHTML='<span style=font-size:38px>🔫</span>'">
     </div>
-    <div class="titre-jeu">LA FAMIGLIA</div>
-    <div class="sous-titre">Jeu de rôles — Mafia</div>
-    <div class="divider"><span class="divider-icon">◆</span></div>
-    <button class="btn-primary" onclick="showScreen('config')">NOUVELLE PARTIE</button>
-    <button class="btn-secondary" onclick="showScreen('rules')">RÈGLES DU JEU</button>
-    <div style="margin-top:30px; font-size:11px; font-family:'Oswald',sans-serif; letter-spacing:3px; color:rgba(212,201,168,0.3); text-align:center;">3 JOUEURS MINIMUM</div>
+    <div class="home-title">LA FAMIGLIA</div>
+    <div class="home-sub">Jeu de rôles — Mafia</div>
+    <div class="divider"><span>◆</span></div>
+    <button class="btn-p" onclick="showScreen('config')">NOUVELLE PARTIE</button>
+    <button class="btn-s" style="margin-top:10px" onclick="showScreen('rules')">RÈGLES DU JEU</button>
+    <div class="home-hint">3 JOUEURS MINIMUM</div>
   </div>
 </div>
 
-<!-- ========== SCREEN: RÈGLES ========== -->
+<!-- ══════════ RULES ══════════ -->
 <div class="screen" id="screen-rules">
-  <div class="screen-header">
-    <div class="screen-title">Règles du Jeu</div>
-    <div class="screen-subtitle">Le code d'honneur</div>
-  </div>
+  <div class="screen-hd"><div class="screen-title">Règles</div><div class="screen-sub">Le code d'honneur</div></div>
   <div class="rules-content">
-    <div class="rule-block">
-      <h3>🎭 Les Rôles</h3>
-      <p><strong style="color:var(--rouge-vif)">MAFIEUX</strong> : La nuit, les mafieux se reconnaissent. Le jour, ils doivent persuader les autres de leur innocence.</p>
-    </div>
-    <div class="rule-block">
-      <h3>👮 Police</h3>
-      <p><strong style="color:#4a9eff">POLICIER</strong> : Citoyen honnête. Le jour, il doit démasquer les mafieux par le débat et le vote.</p>
-    </div>
-    <div class="rule-block">
-      <h3>🕵️ Infiltré</h3>
-      <p><strong style="color:var(--or)">INFILTRÉ</strong> : Présent à partir de 6 joueurs. La nuit, il voit qui sont les mafieux, mais doit garder sa couverture.</p>
-    </div>
-    <div class="rule-block">
-      <h3>🌙 Phase de Nuit</h3>
-      <p>Tout le monde ferme les yeux. Le Maître du Jeu guide la nuit à voix haute. Les mafieux se reconnaissent, l'infiltré observe.</p>
-    </div>
-    <div class="rule-block">
-      <h3>☀️ Phase de Jour</h3>
-      <p>5 minutes de débat. Les joueurs votent pour éliminer un suspect. Le joueur éliminé révèle son rôle.</p>
-    </div>
-    <div class="rule-block">
-      <h3>🏆 Victoire</h3>
-      <p><strong style="color:var(--rouge-vif)">Mafieux</strong> : Égaler ou dépasser le nombre de policiers.<br><strong style="color:#4a9eff">Police</strong> : Éliminer tous les mafieux.</p>
-    </div>
-    <div class="rule-block" style="border-left-color:var(--or)">
-      <h3>📊 Répartition</h3>
-      <p>3-5 joueurs : 1 mafieux / reste policiers<br>6-8 joueurs : 2 mafieux / 1 infiltré<br>9+ joueurs : 3 mafieux / 1 infiltré</p>
-    </div>
+    <div class="rule-block"><h3>🔫 Mafieux</h3><p>La nuit, ils se reconnaissent entre eux. Le jour, ils doivent convaincre les autres de leur innocence.</p></div>
+    <div class="rule-block"><h3>👮 Policier</h3><p>Citoyen honnête. Débattez et votez pour éliminer les mafieux. La ville compte sur vous.</p></div>
+    <div class="rule-block"><h3>🕵️ Infiltré</h3><p>Présent à partir de 6 joueurs. La nuit, il voit qui sont les mafieux — mais garde sa couverture.</p></div>
+    <div class="rule-block"><h3>🌙 Nuit</h3><p>Posez le téléphone. Le narrateur guide la nuit automatiquement.</p></div>
+    <div class="rule-block"><h3>☀️ Jour</h3><p>5 minutes de débat. Votez pour éliminer un suspect — il révèle alors son rôle.</p></div>
+    <div class="rule-block"><h3>🏆 Victoire</h3><p><strong style="color:var(--rouge-vif)">Mafieux :</strong> Égaler ou dépasser les policiers.<br><strong style="color:#4a9eff">Police :</strong> Éliminer tous les mafieux.</p></div>
+    <div class="rule-block" style="border-left-color:var(--or)"><h3>📊 Répartition</h3><p>3–5 joueurs : 1 mafieux<br>5 joueurs : 2 mafieux<br>6–8 joueurs : 2 mafieux + 1 infiltré<br>9+ joueurs : 3 mafieux + 1 infiltré</p></div>
   </div>
-  <div class="bottom-bar">
-    <button class="btn-secondary" onclick="showScreen('home')" style="max-width:400px">← RETOUR</button>
-  </div>
+  <div class="bottom-bar"><button class="btn-s" onclick="showScreen('home')">← RETOUR</button></div>
 </div>
 
-<!-- ========== SCREEN: CONFIG ========== -->
+<!-- ══════════ CONFIG ══════════ -->
 <div class="screen" id="screen-config">
-  <div class="screen-header">
-    <div class="screen-title">Les Joueurs</div>
-    <div class="screen-subtitle">Constituer le gang</div>
-  </div>
-  <div id="players-list" style="width:100%;max-width:400px;"></div>
+  <div class="screen-hd"><div class="screen-title">Les Joueurs</div><div class="screen-sub">Constituer le gang</div></div>
+  <div id="players-list" style="width:100%;max-width:420px;"></div>
   <button class="btn-add" onclick="addPlayer()">+ AJOUTER UN JOUEUR</button>
-  <div class="roles-info" id="roles-info">
-    <p id="roles-preview">Ajoutez au moins 3 joueurs pour commencer.</p>
-  </div>
-  <div class="bottom-bar" style="display:flex;gap:10px;max-width:440px;margin:0 auto;">
-    <button class="btn-secondary" onclick="showScreen('home')" style="flex:1;max-width:none">←</button>
-    <button class="btn-primary" id="btn-start" onclick="startGame()" style="flex:3;max-width:none" disabled>DISTRIBUER LES RÔLES</button>
+  <div class="roles-box" id="roles-box"><p id="roles-txt">Ajoutez au moins <strong>3 joueurs</strong>.</p></div>
+  <div class="bottom-bar">
+    <button class="btn-s" onclick="showScreen('home')" style="flex:0 0 52px;max-width:52px">←</button>
+    <button class="btn-p" id="btn-start" onclick="startGame()" style="flex:1" disabled>DISTRIBUER LES RÔLES</button>
   </div>
 </div>
 
-<!-- ========== SCREEN: DISTRIBUTION ========== -->
+<!-- ══════════ REVEAL ══════════ -->
 <div class="screen" id="screen-reveal">
-  <div class="reveal-content">
-    <div style="font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:3px;color:rgba(212,201,168,0.5);text-transform:uppercase;margin-bottom:16px;" id="reveal-counter">JOUEUR 1 / 5</div>
+  <div class="reveal-wrap">
+    <div class="reveal-counter" id="reveal-counter">JOUEUR 1 / 5</div>
     <div class="flip-zone">
       <div class="flip-inner" id="flip-inner">
         <div class="flip-front">
-          <div class="dossier-back">
-            <div class="lock-icon">🔒</div>
-            <p id="reveal-player-name-front">Appuyez pour révéler votre dossier</p>
-            <p style="font-size:9px;opacity:0.4;margin-top:8px;">CLASSÉ CONFIDENTIEL</p>
+          <div class="card-back">
+            <div class="lock">🔒</div>
+            <p id="flip-front-name">Appuyez pour révéler votre rôle</p>
+            <p style="font-size:9px;opacity:0.35">CLASSÉ CONFIDENTIEL</p>
           </div>
         </div>
         <div class="flip-back">
-          <div class="dossier-card" id="dossier-card">
-            <div class="card-header">
-              <span>DOSSIER N°<span id="dossier-num">001</span></span>
+          <div class="dossier" id="dossier">
+            <div class="dossier-head">
+              <span>DOSSIER N°<span id="dos-num">001</span></span>
               <span>CONFIDENTIEL</span>
             </div>
-            <div class="role-image-zone" id="role-image-zone">
-              <div class="role-emoji-fallback" id="role-emoji">🔫</div>
-            </div>
-            <div class="card-body">
-              <div class="role-badge" id="role-badge">● MAFIA</div>
+            <div class="role-img" id="role-img"><div class="emoji" id="role-emoji">🔫</div></div>
+            <div class="dossier-body">
+              <div class="role-badge" id="role-badge">● LA FAMIGLIA</div>
               <div class="role-name" id="role-name">MAFIEUX</div>
-              <div class="role-desc" id="role-desc">Vous êtes membre de la famille. La nuit, reconnaissez vos frères.</div>
-              <div class="card-footer">
-                <div class="player-name-reveal" id="role-player-name">Tony Montana</div>
-              </div>
+              <div class="role-desc" id="role-desc"></div>
             </div>
+            <div class="dossier-foot"><div class="player-nm" id="role-player"></div></div>
           </div>
         </div>
       </div>
     </div>
-    <div class="reveal-instruction" id="reveal-instruction">Tapez pour révéler votre rôle</div>
+    <div class="reveal-hint" id="reveal-hint">Tapez la carte pour révéler</div>
   </div>
-  <div class="bottom-bar" style="display:flex;gap:10px;max-width:440px;margin:0 auto;">
-    <button class="btn-secondary" onclick="showScreen('config')" style="flex:1;max-width:none">←</button>
-    <button class="btn-primary" id="btn-reveal-next" onclick="revealNext()" style="flex:3;max-width:none">JOUEUR SUIVANT →</button>
+  <div class="bottom-bar">
+    <button class="btn-s" onclick="showScreen('config')" style="flex:0 0 52px;max-width:52px">←</button>
+    <button class="btn-p" id="btn-reveal-next" onclick="revealNext()" style="flex:1">JOUEUR SUIVANT →</button>
   </div>
 </div>
 
-<!-- ========== SCREEN: NUIT ========== -->
+<!-- ══════════ NIGHT ══════════ -->
 <div class="screen" id="screen-night">
-  <div class="night-content">
-    <div style="font-family:'Playfair Display',serif;font-size:32px;color:var(--or);letter-spacing:3px;margin-bottom:4px;text-shadow:0 0 20px rgba(201,168,76,0.4);">LA NUIT</div>
-    <div style="font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:5px;color:rgba(138,0,200,0.8);text-transform:uppercase;margin-bottom:28px;">tombe sur la ville</div>
-
-    <div class="voice-orb">
-      <div class="orb-ring"></div>
-      <div class="orb-ring"></div>
-      <div class="orb-ring"></div>
-      <div class="orb-core" id="orb-core">🎙️</div>
+  <div class="night-inner">
+    <div class="night-title">LA NUIT</div>
+    <div class="night-sub">tombe sur la ville</div>
+    <div class="orb">
+      <div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
+      <div class="orb-core" id="orb">🎙️</div>
     </div>
-
-    <div class="night-step-text" id="night-step-text">La nuit enveloppe la ville...</div>
-
-    <div class="night-progress" id="night-progress"></div>
-
-    <button class="btn-night-next" id="btn-night-next" onclick="nextNightStep()" style="display:none;" disabled>☀️ LE JOUR SE LÈVE</button>
-    <div style="margin-top:16px;">
-      <button class="btn-secondary" style="max-width:220px;font-size:11px;" onclick="goToDay()">PASSER AU JOUR →</button>
+    <div class="night-text" id="night-text">La nuit enveloppe la ville...</div>
+    <div class="night-dots" id="night-dots"></div>
+    <button class="btn-night" id="btn-day" onclick="goToDay()">☀️ LE JOUR SE LÈVE</button>
+    <div style="margin-top:14px">
+      <button class="btn-s" style="max-width:220px;font-size:11px;margin:0 auto" onclick="goToDay()">PASSER AU JOUR →</button>
     </div>
   </div>
 </div>
 
-<!-- ========== SCREEN: JOUR ========== -->
+<!-- ══════════ DAY ══════════ -->
 <div class="screen" id="screen-day">
-  <div class="day-header">
-    <span class="sun-icon">☀️</span>
+  <div class="day-hd">
+    <span class="sun">☀️</span>
     <div class="day-title">LE DÉBAT</div>
-    <div style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:4px;color:rgba(212,201,168,0.4);text-transform:uppercase;margin-top:4px;" id="round-label">MANCHE 1</div>
+    <div class="manche-lbl" id="manche-lbl">MANCHE 1</div>
   </div>
-
   <div class="timer-zone">
-    <div class="timer-display" id="timer-display">05:00</div>
-    <div class="timer-label">Temps restant</div>
-    <div class="timer-controls">
-      <button class="btn-timer pause" id="btn-pause" onclick="togglePause()">⏸ PAUSE</button>
-      <button class="btn-timer add" onclick="addMinute()">+1 MIN</button>
+    <div class="timer-num" id="timer">05:00</div>
+    <div class="timer-lbl">Temps restant</div>
+    <div class="timer-ctrl">
+      <button class="btn-tc p" id="btn-pause" onclick="togglePause()">⏸ PAUSE</button>
+      <button class="btn-tc a" onclick="addMinute()">+1 MIN</button>
     </div>
   </div>
-
-  <div class="day-divider"></div>
-
+  <div class="day-hr"></div>
   <div class="suspects-zone">
-    <div class="suspects-header">
-      <div class="suspects-title">Joueurs</div>
-      <div class="vote-hint">Votez pour éliminer →</div>
+    <div class="suspects-hd">
+      <div class="suspects-lbl">Joueurs</div>
+      <div class="vote-hint-lbl">Tapez pour voter →</div>
     </div>
     <div id="suspects-list"></div>
   </div>
-
-  <div class="day-bottom">
-    <button class="btn-primary" style="flex:1;max-width:none;font-size:13px;letter-spacing:2px;" onclick="showScreen('end')">FIN DE PARTIE</button>
+  <div class="day-bot">
+    <button class="btn-p" onclick="showScreen('end')" style="font-size:13px;letter-spacing:2px">FIN DE PARTIE</button>
   </div>
 </div>
 
-<!-- ========== VOTE REVEAL OVERLAY ========== -->
+<!-- ══════════ VOTE OVERLAY ══════════ -->
 <div id="vote-overlay">
-  <div class="vote-reveal-content">
-    <div class="vote-reveal-label">Joueur éliminé — Révélation</div>
-    <div class="flip-zone" id="vote-flip-zone">
-      <div class="flip-inner" id="vote-flip-inner">
-        <div class="flip-front">
-          <div class="dossier-back" style="min-height:380px;">
-            <div class="lock-icon">⚖️</div>
-            <p id="vote-player-name-front">Le joueur est jugé...</p>
-            <p style="font-size:9px;opacity:0.4;margin-top:6px;">Tapez pour révéler le rôle</p>
-          </div>
+  <div class="vote-lbl">— Joueur éliminé — Révélation —</div>
+  <div class="flip-zone">
+    <div class="flip-inner" id="v-flip">
+      <div class="flip-front">
+        <div class="card-back" style="min-height:400px">
+          <div class="lock">⚖️</div>
+          <p id="v-front-name">Tapez pour révéler le rôle</p>
         </div>
-        <div class="flip-back">
-          <div class="dossier-card" id="vote-dossier-card">
-            <div class="card-header">
-              <span>VERDICT</span>
-              <span>RÉVÉLÉ</span>
-            </div>
-            <div class="role-image-zone" id="vote-role-image-zone">
-              <div class="role-emoji-fallback" id="vote-role-emoji">🔫</div>
-            </div>
-            <div class="card-body">
-              <div class="role-badge" id="vote-role-badge">● MAFIA</div>
-              <div class="role-name" id="vote-role-name">MAFIEUX</div>
-              <div class="role-desc" id="vote-role-desc"></div>
-              <div class="card-footer">
-                <div class="player-name-reveal" id="vote-player-name">Tony</div>
-              </div>
-            </div>
+      </div>
+      <div class="flip-back">
+        <div class="dossier" id="v-dossier">
+          <div class="dossier-head"><span>VERDICT</span><span>RÉVÉLÉ</span></div>
+          <div class="role-img" id="v-role-img"><div class="emoji" id="v-emoji">🔫</div></div>
+          <div class="dossier-body">
+            <div class="role-badge" id="v-badge">● MAFIA</div>
+            <div class="role-name" id="v-name">MAFIEUX</div>
+            <div class="role-desc" id="v-desc"></div>
           </div>
+          <div class="dossier-foot"><div class="player-nm" id="v-player"></div></div>
         </div>
       </div>
     </div>
-    <div class="reveal-instruction" id="vote-instruction" style="margin-top:14px;">Tapez la carte pour révéler</div>
   </div>
-  <div class="vote-bottom">
-    <button class="btn-secondary" style="flex:1;max-width:none;font-size:12px;" onclick="closeVoteOverlay()">← ANNULER</button>
-    <button class="btn-primary" id="btn-confirm-elim" style="flex:2;max-width:none;font-size:12px;display:none;" onclick="confirmElimination()">CONFIRMER L'ÉLIMINATION</button>
+  <div class="vote-hint-text" id="v-hint">Tapez la carte pour révéler</div>
+  <div class="vote-bot">
+    <button class="btn-s" onclick="closeVote()" style="flex:1">← ANNULER</button>
+    <button class="btn-p" id="btn-confirm" onclick="confirmVote()" style="flex:2;display:none">CONFIRMER L'ÉLIMINATION</button>
   </div>
 </div>
 
-<!-- ========== SCREEN: FIN ========== -->
+<!-- ══════════ END ══════════ -->
 <div class="screen" id="screen-end">
-  <div class="end-content">
+  <div class="end-inner">
     <span class="end-icon">🏆</span>
     <div class="end-title">Fin de Partie</div>
-    <div class="end-subtitle">La vérité éclate au grand jour</div>
+    <div class="end-sub">La vérité éclate</div>
     <div class="end-stats" id="end-stats"></div>
-    <button class="btn-primary" onclick="resetGame()">NOUVELLE PARTIE</button>
-    <button class="btn-secondary" style="margin-top:10px;" onclick="showScreen('home')">MENU PRINCIPAL</button>
+    <button class="btn-p" onclick="resetGame()">NOUVELLE PARTIE</button>
+    <button class="btn-s" style="margin-top:10px" onclick="showScreen('home')">MENU PRINCIPAL</button>
   </div>
 </div>
 
 <!-- AUDIO -->
-<audio id="audio-ambiance" loop preload="auto">
-  <source src="ambiance.mp3" type="audio/mpeg">
-</audio>
-<audio id="audio-night" loop preload="auto">
-  <source src="ambiance-nuit.mp3" type="audio/mpeg">
-</audio>
+<audio id="aud-day" loop><source src="ambiance.mp3" type="audio/mpeg"></audio>
+<audio id="aud-night" loop><source src="ambiance-nuit.mp3" type="audio/mpeg"></audio>
 
 <script>
-// ============================================================
+// ════════════════════════════════════
 // STATE
-// ============================================================
-const state = {
-  players: [],
-  roles: [],
-  currentReveal: 0,
-  revealed: false,
-  nightStep: 0,
-  roundNumber: 1,
-  timerSeconds: 300,
-  timerRunning: false,
-  timerInterval: null,
+// ════════════════════════════════════
+const S = {
+  players: [], roles: [],
+  currentReveal: 0, revealed: false,
+  nightStep: 0, roundNumber: 1,
+  timerSec: 300, timerRunning: false, timerInterval: null,
   eliminated: new Set(),
-  audioEnabled: true,
-  voAudio: null,
-  hasUndercover: false,
-  hasMafia: false,
-  voteCandidate: null,
-  voteRevealed: false
+  audioOn: true, voAudio: null,
+  hasUndercover: false, hasMafia: false,
+  voteIdx: null, voteRevealed: false,
+  audioUnlocked: false
 };
 
-// ============================================================
-// NIGHT STEPS
-// ============================================================
-function getNightSteps() {
-  const steps = [
-    {
-      text: "Posez le téléphone.\nLe narrateur va prendre la suite...",
-      vo: 'voix-debut'
-    },
-    {
-      text: "Que tout le monde ferme les yeux...\nLa ville s'endort.",
-      vo: 'voix-nuit'
-    },
-    {
-      text: "La Famiglia se réveille.\nMafieux, ouvrez les yeux et reconnaissez-vous.",
-      vo: 'voix-mafia-reveil',
-      onlyIf: 'mafia'
-    },
-    {
-      text: "Mafieux, fermez les yeux.\nLa Famiglia se rendort.",
-      vo: 'voix-mafia-dodo',
-      onlyIf: 'mafia'
-    },
-    {
-      text: "L'Infiltré se réveille.\nObservez les mafieux en silence.",
-      vo: 'voix-under-reveil',
-      onlyIf: 'undercover'
-    },
-    {
-      text: "L'Infiltré se rendort.\nTout le monde peut ouvrir les yeux.\nLe jour se lève sur la ville.",
-      vo: 'voix-jour',
-      onlyIf: 'undercover'
-    },
-    {
-      text: "Tout le monde peut ouvrir les yeux.\nLe jour se lève sur la ville.\nLe débat peut commencer.",
-      vo: 'voix-jour',
-      onlyIf: 'no-undercover'
-    }
-  ];
+const audDay   = document.getElementById('aud-day');
+const audNight = document.getElementById('aud-night');
 
-  return steps.filter(s => {
-    if (s.onlyIf === 'mafia') return state.hasMafia;
-    if (s.onlyIf === 'undercover') return state.hasUndercover;
-    if (s.onlyIf === 'no-undercover') return !state.hasUndercover;
+// ════════════════════════════════════
+// ROLE DATA
+// ════════════════════════════════════
+const ROLES = {
+  mafia:      { name:'MAFIEUX',  cls:'mafia',      emoji:'🔫', badge:'● LA FAMIGLIA',     desc:'Vous êtes membre de la famiglia. La nuit, ouvrez les yeux et reconnaissez vos frères. Le jour, persuadez tout le monde de votre innocence.' },
+  police:     { name:'POLICIER', cls:'police',      emoji:'👮', badge:'● BRIGADE SPÉCIALE', desc:'Vous êtes un citoyen honnête. Analysez, débattez, votez pour éliminer les mafieux. La ville compte sur vous.' },
+  undercover: { name:'INFILTRÉ', cls:'undercover',  emoji:'🕵️', badge:'● AGENT SECRET',    desc:'Vous avez infiltré la mafia. La nuit, vous voyez qui sont les mafieux — gardez votre couverture.' }
+};
+
+// ════════════════════════════════════
+// NIGHT SEQUENCE
+// ════════════════════════════════════
+function getNightSteps() {
+  const all = [
+    { text:'Posez le téléphone.\nLe narrateur prend la suite...', vo:'voix-debut' },
+    { text:'Que tout le monde ferme les yeux.\nLa ville s\'endort.', vo:'voix-nuit' },
+    { text:'La Famiglia se réveille.\nMafieux, ouvrez les yeux et reconnaissez-vous.', vo:'voix-mafia-reveil', need:'mafia' },
+    { text:'Mafieux, fermez les yeux.\nLa Famiglia se rendort.', vo:'voix-mafia-dodo', need:'mafia' },
+    { text:'L\'Infiltré se réveille.\nObservez les mafieux en silence.', vo:'voix-under-reveil', need:'under' },
+    { text:'L\'Infiltré se rendort.', vo:'voix-mafia-dodo', need:'under' },
+    { text:'Tout le monde peut ouvrir les yeux.\nLe débat peut commencer.', vo:'voix-jour' }
+  ];
+  return all.filter(s => {
+    if (s.need === 'mafia')  return S.hasMafia;
+    if (s.need === 'under')  return S.hasUndercover;
     return true;
   });
 }
 
-// ============================================================
+// ════════════════════════════════════
 // AUDIO
-// ============================================================
-const audioAmbiance = document.getElementById('audio-ambiance');
-const audioNight = document.getElementById('audio-night');
-const audioVO = document.getElementById('audio-vo');
-
-function toggleAudio() {
-  state.audioEnabled = !state.audioEnabled;
-  document.getElementById('audio-icon').textContent = state.audioEnabled ? '🔊' : '🔇';
-  document.getElementById('audio-label').textContent = state.audioEnabled ? 'SON' : 'MUET';
-  if (!state.audioEnabled) {
-    audioAmbiance.pause();
-    audioNight.pause();
-    audioVO.pause();
-  } else {
-    const activeScreen = document.querySelector('.screen.active')?.id;
-    if (activeScreen === 'screen-night') startNightAudio();
-    else startDayAudio();
-  }
+// ════════════════════════════════════
+function unlockAudio() {
+  // iOS requires user interaction to unlock audio context
+  if (S.audioUnlocked) return;
+  S.audioUnlocked = true;
+  audDay.play().then(() => {
+    if (!S.audioOn) audDay.pause();
+  }).catch(() => {});
 }
 
 function startDayAudio() {
-  if (!state.audioEnabled) return;
-  audioNight.pause();
-  audioNight.currentTime = 0;
-  audioAmbiance.volume = 0.5;
-  audioAmbiance.play().catch(() => {});
+  if (!S.audioOn) return;
+  audNight.pause(); audNight.currentTime = 0;
+  audDay.volume = 0.5;
+  audDay.play().catch(() => {});
 }
 
 function startNightAudio() {
-  if (!state.audioEnabled) return;
-  audioAmbiance.pause();
-  audioAmbiance.currentTime = 0;
-  audioNight.volume = 0.6;
-  audioNight.play().catch(() => {});
+  if (!S.audioOn) return;
+  audDay.pause(); audDay.currentTime = 0;
+  audNight.volume = 0.6;
+  audNight.play().catch(() => {});
 }
 
-function playVO(filename, callback) {
-  // Stop any current VO
-  if (state.voAudio) {
-    state.voAudio.onended = null;
-    state.voAudio.onerror = null;
-    state.voAudio.pause();
-  }
-
-  if (!state.audioEnabled) {
-    if (callback) setTimeout(callback, 800);
-    return;
-  }
-
-  // Create a fresh Audio object each time — avoids all src/load conflicts
-  const audio = new Audio(filename + '.mp3');
-  state.voAudio = audio;
-
-  audio.onended = function() {
-    if (state.voAudio !== audio) return;
-    if (callback) callback();
-  };
-
-  audio.onerror = function() {
-    if (state.voAudio !== audio) return;
-    console.warn('VO manquant:', filename);
-    if (callback) setTimeout(callback, 800);
-  };
-
-  audio.play().catch(function() {
-    if (callback) setTimeout(callback, 800);
-  });
-}
-
-function stopAllAudio() {
-  audioAmbiance.pause();
-  audioNight.pause();
-  if (state.voAudio) {
-    state.voAudio.onended = null;
-    state.voAudio.pause();
-    state.voAudio = null;
+function stopVO() {
+  if (S.voAudio) {
+    S.voAudio.onended = null;
+    S.voAudio.onerror = null;
+    try { S.voAudio.pause(); } catch(e){}
+    S.voAudio = null;
   }
 }
 
-// ============================================================
+function playVO(file, cb) {
+  stopVO();
+  if (!S.audioOn) { if (cb) setTimeout(cb, 600); return; }
+  const a = new Audio(file + '.mp3');
+  S.voAudio = a;
+  a.onended = () => { if (S.voAudio === a) { S.voAudio = null; if (cb) cb(); } };
+  a.onerror = () => { if (S.voAudio === a) { S.voAudio = null; if (cb) setTimeout(cb, 600); } };
+  a.play().catch(() => { if (S.voAudio === a) { S.voAudio = null; if (cb) setTimeout(cb, 600); } });
+}
+
+function toggleAudio() {
+  S.audioOn = !S.audioOn;
+  document.getElementById('audio-icon').textContent = S.audioOn ? '🔊' : '🔇';
+  document.getElementById('audio-lbl').textContent  = S.audioOn ? 'SON' : 'MUET';
+  if (!S.audioOn) { audDay.pause(); audNight.pause(); stopVO(); }
+  else {
+    const id = document.querySelector('.screen.active')?.id;
+    if (id === 'screen-night') startNightAudio(); else startDayAudio();
+  }
+}
+
+function stopAll() {
+  audDay.pause(); audNight.pause(); stopVO();
+}
+
+// ════════════════════════════════════
 // SCREENS
-// ============================================================
+// ════════════════════════════════════
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name).classList.add('active');
 
-  // Audio
+  const nightBg = document.getElementById('bg-night');
+  const starsEl = document.getElementById('stars');
+
   if (name === 'night') {
-    document.getElementById('bg-night').style.opacity = '1';
-    document.getElementById('stars').style.opacity = '1';
+    nightBg.style.opacity = '1'; starsEl.style.opacity = '1';
     startNightAudio();
-    initNightScreen();
+    initNight();
   } else {
-    document.getElementById('bg-night').style.opacity = '0';
-    document.getElementById('stars').style.opacity = '0';
-    if (name !== 'home' && name !== 'rules') startDayAudio();
+    nightBg.style.opacity = '0'; starsEl.style.opacity = '0';
+    if (!['home','rules'].includes(name)) startDayAudio();
   }
 
   if (name === 'day') {
-    state.timerSeconds = 300;
-    updateTimerDisplay();
-    updateSuspectsList();
-    startTimer();
-    document.getElementById('round-label').textContent = `MANCHE ${state.roundNumber}`;
+    S.timerSec = 300; updateTimer(); updateSuspects(); startTimer();
+    document.getElementById('manche-lbl').textContent = `MANCHE ${S.roundNumber}`;
   }
-  if (name === 'end') {
-    stopAllAudio();
-    updateEndScreen();
-  }
+  if (name === 'end') { stopAll(); buildEndScreen(); }
 }
 
-// ============================================================
+// ════════════════════════════════════
 // STARS
-// ============================================================
+// ════════════════════════════════════
 function initStars() {
-  const canvas = document.getElementById('stars');
-  const ctx = canvas.getContext('2d');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-
-  const stars = [];
-  for (let i = 0; i < 120; i++) {
-    stars.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: Math.random() * 1.5 + 0.3,
-      op: Math.random() * 0.5 + 0.2,
-      speed: Math.random() * 0.02 + 0.005
-    });
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const t = Date.now() / 1000;
+  const c = document.getElementById('stars');
+  const ctx = c.getContext('2d');
+  c.width = window.innerWidth; c.height = window.innerHeight;
+  const stars = Array.from({length:110}, () => ({
+    x: Math.random()*c.width, y: Math.random()*c.height,
+    r: Math.random()*1.4+0.3, op: Math.random()*0.5+0.2,
+    spd: Math.random()*0.025+0.006
+  }));
+  (function draw() {
+    ctx.clearRect(0,0,c.width,c.height);
+    const t = Date.now()/1000;
     stars.forEach(s => {
-      const op = s.op + Math.sin(t * s.speed * 10) * 0.3;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${Math.max(0, Math.min(1, op))})`;
+      const o = s.op + Math.sin(t*s.spd*10)*0.3;
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${Math.max(0,Math.min(1,o))})`;
       ctx.fill();
     });
     requestAnimationFrame(draw);
-  }
-  draw();
+  })();
 }
 
-// ============================================================
-// PLAYERS CONFIG
-// ============================================================
-function updatePlayersUI() {
-  const list = document.getElementById('players-list');
-  list.innerHTML = '';
-  state.players.forEach((p, i) => {
+// ════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════
+function getRolesCfg(n) {
+  let mafia=1, under=0;
+  if (n>=9) { mafia=3; under=1; }
+  else if (n>=6) { mafia=2; under=1; }
+  else if (n>=5) { mafia=2; }
+  return { mafia, under, police: n-mafia-under };
+}
+
+function renderPlayers() {
+  const el = document.getElementById('players-list');
+  el.innerHTML = '';
+  S.players.forEach((p,i) => {
     const row = document.createElement('div');
-    row.className = 'player-input-row';
+    row.className = 'player-row';
     row.innerHTML = `
-      <div class="player-number">${i + 1}</div>
-      <input type="text" placeholder="Nom du joueur ${i + 1}" value="${p}" 
-             oninput="updatePlayer(${i}, this.value)" maxlength="20">
-      ${i >= 3 ? `<button class="btn-remove" onclick="removePlayer(${i})">×</button>` : '<div style="width:46px"></div>'}
+      <div class="pnum">${i+1}</div>
+      <input type="text" placeholder="Joueur ${i+1}" value="${p}" oninput="S.players[${i}]=this.value;updateRolesInfo()" maxlength="18">
+      ${i>=3 ? `<button class="btn-rm" onclick="removePlayer(${i})">×</button>` : '<div style="width:44px"></div>'}
     `;
-    list.appendChild(row);
+    el.appendChild(row);
   });
-  updateRolesInfo();
-}
-
-function updatePlayer(i, val) {
-  state.players[i] = val;
   updateRolesInfo();
 }
 
 function addPlayer() {
-  if (state.players.length >= 12) { showToast('Maximum 12 joueurs'); return; }
-  state.players.push('');
-  updatePlayersUI();
+  if (S.players.length>=12) { showToast('Maximum 12 joueurs'); return; }
+  S.players.push(''); renderPlayers();
 }
-
-function removePlayer(i) {
-  state.players.splice(i, 1);
-  updatePlayersUI();
-}
-
-function getRolesConfig(n) {
-  let mafia = 1, undercover = 0, police;
-  if (n >= 9) { mafia = 3; undercover = 1; }
-  else if (n >= 6) { mafia = 2; undercover = 1; }
-  else if (n >= 5) { mafia = 2; undercover = 0; }
-  police = n - mafia - undercover;
-  return { mafia, undercover, police };
-}
+function removePlayer(i) { S.players.splice(i,1); renderPlayers(); }
 
 function updateRolesInfo() {
-  const filled = state.players.filter(p => p.trim()).length;
+  const filled = S.players.filter(p=>p.trim()).length;
   const btn = document.getElementById('btn-start');
-  const info = document.getElementById('roles-preview');
-
-  if (filled < 3) {
-    btn.disabled = true;
-    info.innerHTML = 'Ajoutez au moins <strong>3 joueurs</strong> pour commencer.';
-    return;
-  }
-
+  const txt = document.getElementById('roles-txt');
+  if (filled < 3) { btn.disabled=true; txt.innerHTML='Ajoutez au moins <strong>3 joueurs</strong>.'; return; }
   btn.disabled = false;
-  const { mafia, undercover, police } = getRolesConfig(filled);
-  let txt = `<strong>${filled} joueurs</strong> : `;
-  txt += `<strong style="color:var(--rouge-vif)">${mafia} mafieux</strong>`;
-  if (undercover) txt += ` + <strong style="color:var(--or)">${undercover} infiltré</strong>`;
-  txt += ` + <strong style="color:#4a9eff">${police} policiers</strong>`;
-  info.innerHTML = txt;
+  const {mafia,under,police} = getRolesCfg(filled);
+  txt.innerHTML = `<strong>${filled} joueurs</strong> : <strong style="color:var(--rouge-vif)">${mafia} mafieux</strong>${under?` + <strong style="color:var(--or)">${under} infiltré</strong>`:''} + <strong style="color:#4a9eff">${police} policiers</strong>`;
 }
 
-// ============================================================
-// GAME START / ROLES
-// ============================================================
+// ════════════════════════════════════
+// START GAME
+// ════════════════════════════════════
+function shuffle(a) {
+  const b=[...a];
+  for(let i=b.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]; }
+  return b;
+}
+
 function startGame() {
-  const validPlayers = state.players.filter(p => p.trim());
-  if (validPlayers.length < 3) { showToast('Minimum 3 joueurs requis'); return; }
-
-  const n = validPlayers.length;
-  const { mafia, undercover, police } = getRolesConfig(n);
-  state.hasUndercover = undercover > 0;
-  state.hasMafia = mafia > 0;
-
-  // Build roles array
-  let rolesArr = [];
-  for (let i = 0; i < mafia; i++) rolesArr.push('mafia');
-  for (let i = 0; i < undercover; i++) rolesArr.push('undercover');
-  for (let i = 0; i < police; i++) rolesArr.push('police');
-
-  // Shuffle
-  rolesArr = shuffle(rolesArr);
-  state.roles = rolesArr;
-  state.players = validPlayers;
-  state.currentReveal = 0;
-  state.revealed = false;
-  state.eliminated = new Set();
-  state.roundNumber = 1;
-
+  const vp = S.players.filter(p=>p.trim());
+  if (vp.length<3) { showToast('Minimum 3 joueurs'); return; }
+  const n = vp.length;
+  const {mafia,under} = getRolesCfg(n);
+  S.hasMafia = mafia>0; S.hasUndercover = under>0;
+  S.players = vp; S.eliminated = new Set(); S.roundNumber = 1;
+  S.currentReveal = 0; S.revealed = false;
+  let pool = [];
+  for(let i=0;i<mafia;i++) pool.push('mafia');
+  for(let i=0;i<under;i++) pool.push('undercover');
+  while(pool.length<n) pool.push('police');
+  S.roles = shuffle(pool);
   showScreen('reveal');
-  setupRevealScreen();
+  setupReveal();
 }
 
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
+// ════════════════════════════════════
+// REVEAL
+// ════════════════════════════════════
+function setupReveal() {
+  const total = S.players.length;
+  document.getElementById('reveal-counter').textContent = `JOUEUR ${S.currentReveal+1} / ${total}`;
+  document.getElementById('flip-front-name').textContent = `${S.players[S.currentReveal]} — appuyez pour révéler`;
+  S.revealed = false;
+
+  // Reset flip by cloning
+  const old = document.getElementById('flip-inner');
+  const fresh = old.cloneNode(true);
+  old.parentNode.replaceChild(fresh, old);
+  fresh.classList.remove('flipped');
+  fresh.addEventListener('click', doFlip, { once: true });
+
+  document.getElementById('reveal-hint').textContent = 'Tapez la carte pour révéler';
+  const btn = document.getElementById('btn-reveal-next');
+  btn.textContent = S.currentReveal < total-1 ? 'JOUEUR SUIVANT →' : 'COMMENCER LA NUIT 🌙';
 }
 
-// ============================================================
-// REVEAL SCREEN
-// ============================================================
-const ROLE_DATA = {
-  mafia: {
-    name: 'MAFIEUX', class: 'mafia', emoji: '🔫',
-    badge: '● LA FAMIGLIA',
-    desc: 'Vous êtes membre de la famiglia. La nuit, ouvrez les yeux et reconnaissez vos frères. Le jour, persuadez tout le monde de votre innocence.'
-  },
-  police: {
-    name: 'POLICIER', class: 'police', emoji: '👮',
-    badge: '● BRIGADE SPÉCIALE',
-    desc: 'Vous êtes un citoyen honnête. Analysez, débattez, et votez pour éliminer les mafieux. La ville compte sur vous.'
-  },
-  undercover: {
-    name: 'INFILTRÉ', class: 'undercover', emoji: '🕵️',
-    badge: '● AGENT SECRET',
-    desc: 'Vous avez infiltré la mafia. La nuit, vous voyez qui sont les mafieux — mais gardez votre couverture à tout prix.'
-  }
-};
+function doFlip() {
+  const i = S.currentReveal;
+  const role = S.roles[i];
+  const rd = ROLES[role];
+  const player = S.players[i];
 
-function setupRevealScreen() {
-  const total = state.players.length;
-  document.getElementById('reveal-counter').textContent = `JOUEUR ${state.currentReveal + 1} / ${total}`;
-  document.getElementById('reveal-player-name-front').textContent = `${state.players[state.currentReveal]}, appuyez pour révéler`;
+  document.getElementById('dos-num').textContent = String(i+1).padStart(3,'0');
 
-  // Reset flip
-  const flipInner = document.getElementById('flip-inner');
-  flipInner.classList.remove('flipped');
-  state.revealed = false;
-
-  document.getElementById('reveal-instruction').textContent = 'Tapez la carte pour révéler votre rôle';
-
-  const btnNext = document.getElementById('btn-reveal-next');
-  btnNext.textContent = state.currentReveal < total - 1 ? 'JOUEUR SUIVANT →' : 'COMMENCER LA NUIT 🌙';
-
-  // Remove old listener and attach fresh one
-  const newFlip = flipInner.cloneNode(true);
-  flipInner.parentNode.replaceChild(newFlip, flipInner);
-  newFlip.addEventListener('click', flipCard, { once: true });
-}
-
-function flipCard() {
-  if (state.revealed) return;
-
-  const role = state.roles[state.currentReveal];
-  const rd = ROLE_DATA[role];
-  const player = state.players[state.currentReveal];
-
-  document.getElementById('dossier-num').textContent = String(state.currentReveal + 1).padStart(3, '0');
-
-  // Try img first
-  const imgZone = document.getElementById('role-image-zone');
+  const imgZone = document.getElementById('role-img');
   imgZone.innerHTML = '';
   const img = new Image();
   img.src = `role-${role}.png`;
-  img.onload = () => {
-    imgZone.innerHTML = '';
-    imgZone.appendChild(img);
-    img.style.cssText = 'width:100%;height:100%;object-fit:cover;opacity:0.85;filter:contrast(1.1) saturate(0.7);';
-  };
-  img.onerror = () => {
-    imgZone.innerHTML = `<div class="role-emoji-fallback">${rd.emoji}</div>`;
-  };
+  img.onload  = () => { imgZone.innerHTML=''; imgZone.appendChild(img); img.style.cssText='width:100%;height:100%;object-fit:cover;opacity:0.85;filter:contrast(1.1) saturate(0.7)'; };
+  img.onerror = () => { imgZone.innerHTML=`<div class="emoji">${rd.emoji}</div>`; };
 
-  document.getElementById('role-badge').textContent = rd.badge;
-  document.getElementById('role-badge').className = `role-badge ${rd.class}`;
-  document.getElementById('role-name').textContent = rd.name;
-  document.getElementById('role-name').className = `role-name ${rd.class}`;
-  document.getElementById('role-desc').textContent = rd.desc;
-  document.getElementById('role-player-name').textContent = player;
+  document.getElementById('role-badge').textContent  = rd.badge;
+  document.getElementById('role-badge').className    = `role-badge ${rd.cls}`;
+  document.getElementById('role-name').textContent   = rd.name;
+  document.getElementById('role-name').className     = `role-name ${rd.cls}`;
+  document.getElementById('role-desc').textContent   = rd.desc;
+  document.getElementById('role-player').textContent = player;
 
   document.getElementById('flip-inner').classList.add('flipped');
-  state.revealed = true;
-  document.getElementById('reveal-instruction').textContent = 'Mémorisez votre rôle, puis passez le téléphone';
+  S.revealed = true;
+  document.getElementById('reveal-hint').textContent = 'Mémorisez votre rôle, puis passez le téléphone';
 }
 
 function revealNext() {
-  if (!state.revealed) { showToast('Révélez votre rôle d\'abord'); return; }
-
-  if (state.currentReveal < state.players.length - 1) {
-    state.currentReveal++;
-    setupRevealScreen();
+  if (!S.revealed) { showToast('Révélez d\'abord votre rôle'); return; }
+  if (S.currentReveal < S.players.length-1) {
+    S.currentReveal++;
+    setupReveal();
   } else {
-    // All revealed — go to night, sequence handles everything
     showScreen('night');
   }
 }
 
-// ============================================================
-// NIGHT SCREEN
-// ============================================================
-function initNightScreen() {
-  state.nightStep = 0;
+// ════════════════════════════════════
+// NIGHT
+// ════════════════════════════════════
+function initNight() {
+  S.nightStep = 0;
   const steps = getNightSteps();
-
-  // Progress dots
-  const prog = document.getElementById('night-progress');
-  prog.innerHTML = steps.map((_, i) => `<div class="progress-dot" id="dot-${i}"></div>`).join('');
-
-  // Reset button
-  const btn = document.getElementById('btn-night-next');
-  btn.style.display = 'none';
-  btn.disabled = true;
-
-  // Wait for night music to settle, then start sequence
-  setTimeout(() => runNightStep(0), 2000);
+  const dotsEl = document.getElementById('night-dots');
+  dotsEl.innerHTML = steps.map((_,i) => `<div class="ndot" id="nd${i}"></div>`).join('');
+  document.getElementById('btn-day').style.display = 'none';
+  document.getElementById('night-text').style.opacity = '1';
+  document.getElementById('night-text').textContent = 'La nuit enveloppe la ville...';
+  // Give night music 1.8s to set the mood, then start narration
+  setTimeout(() => runStep(0), 1800);
 }
 
-function runNightStep(index) {
+function runStep(idx) {
   const steps = getNightSteps();
-  if (index >= steps.length) {
-    // All steps done — enable the "Le jour se lève" button
-    const btn = document.getElementById('btn-night-next');
+  if (idx >= steps.length) {
+    // Sequence complete
+    const btn = document.getElementById('btn-day');
     btn.style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = '☀️ LE JOUR SE LÈVE';
     return;
   }
 
-  state.nightStep = index;
-  const step = steps[index];
-  const isLast = index === steps.length - 1;
-
-  // Fade text
-  const textEl = document.getElementById('night-step-text');
-  textEl.style.transition = 'opacity 0.5s ease';
-  textEl.style.opacity = '0';
-  setTimeout(() => {
-    textEl.textContent = step.text;
-    textEl.style.opacity = '1';
-  }, 500);
+  S.nightStep = idx;
+  const step = steps[idx];
+  const isLast = idx === steps.length - 1;
 
   // Update dots
-  steps.forEach((_, i) => {
-    const dot = document.getElementById('dot-' + i);
-    if (!dot) return;
-    dot.className = 'progress-dot' + (i < index ? ' done' : i === index ? ' active' : '');
+  steps.forEach((_,i) => {
+    const d = document.getElementById('nd'+i);
+    if (d) d.className = 'ndot' + (i<idx?' done':i===idx?' active':'');
   });
 
-  // Orb speaks
-  const orb = document.getElementById('orb-core');
+  // Fade text
+  const el = document.getElementById('night-text');
+  el.style.opacity = '0';
+  setTimeout(() => { el.textContent = step.text; el.style.opacity = '1'; }, 400);
+
+  // Orb
+  const orb = document.getElementById('orb');
   orb.classList.add('speaking');
 
-  // Play VO — when done, wait 2s then run next step
-  playVO('voix-' + step.vo, () => {
+  // Play VO — chain naturally on end
+  playVO(step.vo, () => {
     orb.classList.remove('speaking');
-    if (!isLast) {
-      setTimeout(() => runNightStep(index + 1), 2000);
-    } else {
-      // Last step done — show the day button
+    if (isLast) {
       setTimeout(() => {
-        const btn = document.getElementById('btn-night-next');
-        btn.style.display = 'block';
-        btn.disabled = false;
-        btn.textContent = '☀️ LE JOUR SE LÈVE';
-      }, 1000);
+        document.getElementById('btn-day').style.display = 'block';
+      }, 800);
+    } else {
+      setTimeout(() => runStep(idx + 1), 1800);
     }
   });
-}
-
-function updateNightStep() {
-  // Legacy stub — kept for safety, not used in auto-chain
-}
-
-function nextNightStep() {
-  goToDay();
 }
 
 function goToDay() {
-  state.roundNumber++;
+  stopVO();
+  S.roundNumber++;
   showScreen('day');
 }
 
-// ============================================================
-// DAY / TIMER
-// ============================================================
+// ════════════════════════════════════
+// TIMER
+// ════════════════════════════════════
 function startTimer() {
-  if (state.timerInterval) clearInterval(state.timerInterval);
-  state.timerRunning = true;
+  if (S.timerInterval) clearInterval(S.timerInterval);
+  S.timerRunning = true;
   document.getElementById('btn-pause').textContent = '⏸ PAUSE';
-  state.timerInterval = setInterval(() => {
-    if (!state.timerRunning) return;
-    state.timerSeconds--;
-    updateTimerDisplay();
-
-    if (state.timerSeconds === 60) {
-      playVO('voix-60s');
-      showToast('⚠️ 1 minute restante !');
-    }
-    if (state.timerSeconds <= 0) {
-      clearInterval(state.timerInterval);
-      state.timerRunning = false;
-      playVO('voix-chrono-fin');
-      showToast('⏰ TEMPS ÉCOULÉ — VOTEZ !');
-    }
+  S.timerInterval = setInterval(() => {
+    if (!S.timerRunning) return;
+    S.timerSec--;
+    updateTimer();
+    if (S.timerSec === 60) { playVO('voix-60s'); showToast('⚠️ 1 minute restante !'); }
+    if (S.timerSec <= 0)   { clearInterval(S.timerInterval); S.timerRunning=false; playVO('voix-chrono-fin'); showToast('⏰ TEMPS ÉCOULÉ !'); }
   }, 1000);
 }
 
-function updateTimerDisplay() {
-  const m = Math.floor(state.timerSeconds / 60);
-  const s = state.timerSeconds % 60;
-  const display = document.getElementById('timer-display');
-  display.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  display.className = 'timer-display' + (state.timerSeconds <= 30 ? ' urgent' : '');
+function updateTimer() {
+  const m = Math.floor(S.timerSec/60), s = S.timerSec%60;
+  const el = document.getElementById('timer');
+  el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  el.className = 'timer-num' + (S.timerSec<=30?' urgent':'');
 }
 
 function togglePause() {
-  state.timerRunning = !state.timerRunning;
-  document.getElementById('btn-pause').textContent = state.timerRunning ? '⏸ PAUSE' : '▶ REPRENDRE';
+  S.timerRunning = !S.timerRunning;
+  document.getElementById('btn-pause').textContent = S.timerRunning ? '⏸ PAUSE' : '▶ REPRENDRE';
 }
 
 function addMinute() {
-  state.timerSeconds += 60;
-  if (state.timerSeconds > 600) state.timerSeconds = 600;
-  updateTimerDisplay();
-  showToast('+1 minute ajoutée');
+  S.timerSec = Math.min(S.timerSec+60, 600);
+  updateTimer(); showToast('+1 minute');
 }
 
-// ============================================================
-// SUSPECTS & VOTE
-// ============================================================
-function updateSuspectsList() {
-  const list = document.getElementById('suspects-list');
-  list.innerHTML = '';
-  state.players.forEach((p, i) => {
-    const isElim = state.eliminated.has(i);
-    const isVoted = state.voteCandidate === i;
+// ════════════════════════════════════
+// SUSPECTS + VOTE
+// ════════════════════════════════════
+function updateSuspects() {
+  const el = document.getElementById('suspects-list');
+  el.innerHTML = '';
+  S.players.forEach((p,i) => {
+    const elim = S.eliminated.has(i);
     const div = document.createElement('div');
-    div.className = 'suspect-item' + (isElim ? ' eliminated' : isVoted ? ' voted' : '');
-    div.onclick = isElim ? null : () => openVoteOverlay(i);
+    div.className = 'suspect-row' + (elim?' elim':'');
+    if (!elim) div.onclick = () => openVote(i);
     div.innerHTML = `
-      <div class="suspect-avatar">${p.charAt(0).toUpperCase()}</div>
-      <div class="suspect-name">${p}</div>
-      ${isElim
-        ? '<span class="suspect-elim-badge">ÉLIMINÉ</span>'
-        : `<span class="suspect-vote-icon">${isVoted ? '🗳️' : '○'}</span>`}
+      <div class="s-avatar">${p.charAt(0).toUpperCase()}</div>
+      <div class="s-name">${p}</div>
+      ${elim ? '<span class="s-elim">ÉLIMINÉ</span>' : '<span class="s-icon">🗳️</span>'}
     `;
-    list.appendChild(div);
+    el.appendChild(div);
   });
 }
 
-function openVoteOverlay(playerIndex) {
-  state.voteCandidate = playerIndex;
-  state.voteRevealed = false;
-  const player = state.players[playerIndex];
+function openVote(idx) {
+  S.voteIdx = idx; S.voteRevealed = false;
+  document.getElementById('v-front-name').textContent = `${S.players[idx]} — Tapez pour révéler`;
+  document.getElementById('v-hint').textContent = 'Tapez la carte pour révéler le rôle';
+  document.getElementById('btn-confirm').style.display = 'none';
 
-  // Reset the flip card
-  const flipInner = document.getElementById('vote-flip-inner');
-  const newFlip = flipInner.cloneNode(true);
-  flipInner.parentNode.replaceChild(newFlip, flipInner);
+  // Fresh clone to reset listeners
+  const old = document.getElementById('v-flip');
+  const fresh = old.cloneNode(true);
+  old.parentNode.replaceChild(fresh, old);
+  fresh.classList.remove('flipped');
+  fresh.addEventListener('click', doVoteFlip, { once: true });
 
-  document.getElementById('vote-player-name-front').textContent = `${player} — Tapez pour révéler`;
-  document.getElementById('vote-instruction').textContent = 'Tapez la carte pour révéler le rôle';
-  document.getElementById('btn-confirm-elim').style.display = 'none';
-
-  // Attach flip click
-  newFlip.addEventListener('click', revealVoteCard, { once: true });
-
-  document.getElementById('vote-overlay').classList.add('visible');
-  updateSuspectsList();
+  document.getElementById('vote-overlay').classList.add('open');
 }
 
-function revealVoteCard() {
-  if (state.voteRevealed) return;
-  const i = state.voteCandidate;
-  const role = state.roles[i];
-  const rd = ROLE_DATA[role];
-  const player = state.players[i];
+function doVoteFlip() {
+  const i = S.voteIdx;
+  const role = S.roles[i];
+  const rd = ROLES[role];
 
-  // Fill card data
-  const imgZone = document.getElementById('vote-role-image-zone');
+  const imgZone = document.getElementById('v-role-img');
   imgZone.innerHTML = '';
   const img = new Image();
   img.src = `role-${role}.png`;
-  img.onload = () => {
-    imgZone.innerHTML = '';
-    imgZone.appendChild(img);
-    img.style.cssText = 'width:100%;height:100%;object-fit:cover;opacity:0.85;filter:contrast(1.1) saturate(0.7);';
-  };
-  img.onerror = () => { imgZone.innerHTML = `<div class="role-emoji-fallback">${rd.emoji}</div>`; };
+  img.onload  = () => { imgZone.innerHTML=''; imgZone.appendChild(img); img.style.cssText='width:100%;height:100%;object-fit:cover;opacity:0.85;filter:contrast(1.1) saturate(0.7)'; };
+  img.onerror = () => { imgZone.innerHTML=`<div class="emoji">${rd.emoji}</div>`; };
 
-  document.getElementById('vote-role-badge').textContent = rd.badge;
-  document.getElementById('vote-role-badge').className = `role-badge ${rd.class}`;
-  document.getElementById('vote-role-name').textContent = rd.name;
-  document.getElementById('vote-role-name').className = `role-name ${rd.class}`;
-  document.getElementById('vote-role-desc').textContent = rd.desc;
-  document.getElementById('vote-player-name').textContent = player;
+  document.getElementById('v-badge').textContent  = rd.badge;
+  document.getElementById('v-badge').className    = `role-badge ${rd.cls}`;
+  document.getElementById('v-name').textContent   = rd.name;
+  document.getElementById('v-name').className     = `role-name ${rd.cls}`;
+  document.getElementById('v-desc').textContent   = rd.desc;
+  document.getElementById('v-player').textContent = S.players[i];
 
-  document.getElementById('vote-flip-inner').classList.add('flipped');
-  state.voteRevealed = true;
-  document.getElementById('vote-instruction').textContent = 'Rôle révélé — Confirmez l\'élimination';
-  document.getElementById('btn-confirm-elim').style.display = 'block';
+  document.getElementById('v-flip').classList.add('flipped');
+  S.voteRevealed = true;
+  document.getElementById('v-hint').textContent = 'Rôle révélé — confirmez l\'élimination';
+  document.getElementById('btn-confirm').style.display = 'block';
 }
 
-function confirmElimination() {
-  state.eliminated.add(state.voteCandidate);
-  closeVoteOverlay();
-  showToast(`${state.players[state.voteCandidate]} a été éliminé`);
-  state.voteCandidate = null;
-
-  // Pause timer, go to night automatically
-  state.timerRunning = false;
-  if (state.timerInterval) clearInterval(state.timerInterval);
-
-  setTimeout(() => {
-    showScreen('night');
-  }, 1200);
+function confirmVote() {
+  const i = S.voteIdx;
+  S.eliminated.add(i);
+  document.getElementById('vote-overlay').classList.remove('open');
+  showToast(`${S.players[i]} a été éliminé`);
+  S.voteIdx = null;
+  if (S.timerInterval) clearInterval(S.timerInterval);
+  S.timerRunning = false;
+  updateSuspects();
+  setTimeout(() => showScreen('night'), 1000);
 }
 
-function closeVoteOverlay() {
-  document.getElementById('vote-overlay').classList.remove('visible');
-  state.voteCandidate = null;
-  updateSuspectsList();
+function closeVote() {
+  S.voteIdx = null;
+  document.getElementById('vote-overlay').classList.remove('open');
 }
 
-function eliminatePlayer(i) {
-  state.eliminated.add(i);
-  updateSuspectsList();
-  showToast(`${state.players[i]} a été éliminé`);
-}
-
-function restorePlayer(i) {
-  state.eliminated.delete(i);
-  updateSuspectsList();
-}
-
-// ============================================================
-// END SCREEN
-// ============================================================
-function updateEndScreen() {
-  const stats = document.getElementById('end-stats');
-  const roleCount = { mafia: 0, police: 0, undercover: 0 };
-  state.roles.forEach(r => roleCount[r]++);
-
-  const mafiaPlayers = state.players.filter((_, i) => state.roles[i] === 'mafia').join(', ');
-  const elimMafia = state.players.filter((_, i) => state.roles[i] === 'mafia' && state.eliminated.has(i)).length;
-
-  stats.innerHTML = `
-    <p>Mafieux <span>${roleCount.mafia}</span></p>
-    <p>Policiers <span>${roleCount.police}</span></p>
-    ${roleCount.undercover ? `<p>Infiltré <span>${roleCount.undercover}</span></p>` : ''}
-    <p>Joueurs éliminés <span>${state.eliminated.size}</span></p>
-    <p>Mafieux démasqués <span>${elimMafia}/${roleCount.mafia}</span></p>
-    <p style="padding-top:8px;border-top:1px solid rgba(201,168,76,0.2);margin-top:4px;">La famiglia était : <span style="color:var(--rouge-vif)">${mafiaPlayers}</span></p>
+// ════════════════════════════════════
+// END
+// ════════════════════════════════════
+function buildEndScreen() {
+  const cnt = {mafia:0,police:0,undercover:0};
+  S.roles.forEach(r => cnt[r]++);
+  const mafiaNames = S.players.filter((_,i)=>S.roles[i]==='mafia').join(', ');
+  const elimMafia  = S.players.filter((_,i)=>S.roles[i]==='mafia'&&S.eliminated.has(i)).length;
+  document.getElementById('end-stats').innerHTML = `
+    <p>Mafieux <span>${cnt.mafia}</span></p>
+    <p>Policiers <span>${cnt.police}</span></p>
+    ${cnt.undercover?`<p>Infiltré <span>${cnt.undercover}</span></p>`:''}
+    <p>Joueurs éliminés <span>${S.eliminated.size}</span></p>
+    <p>Mafieux démasqués <span>${elimMafia}/${cnt.mafia}</span></p>
+    <p style="padding-top:8px;border-top:1px solid rgba(201,168,76,0.15);margin-top:4px">La famiglia était : <span style="color:var(--rouge-vif)">${mafiaNames}</span></p>
   `;
 }
 
 function resetGame() {
-  stopAllAudio();
-  state.players = ['', '', ''];
-  state.roles = [];
-  state.eliminated = new Set();
-  state.roundNumber = 1;
-  state.timerSeconds = 300;
-  state.voteCandidate = null;
-  state.voteRevealed = false;
-  if (state.timerInterval) clearInterval(state.timerInterval);
-  document.getElementById('vote-overlay').classList.remove('visible');
-  showScreen('config');
-  updatePlayersUI();
+  stopAll();
+  S.players=['','','']; S.roles=[]; S.eliminated=new Set();
+  S.roundNumber=1; S.timerSec=300; S.voteIdx=null; S.voteRevealed=false;
+  if (S.timerInterval) clearInterval(S.timerInterval);
+  document.getElementById('vote-overlay').classList.remove('open');
+  showScreen('config'); renderPlayers();
 }
 
-// ============================================================
+// ════════════════════════════════════
 // TOAST
-// ============================================================
-function showToast(msg, duration = 2500) {
+// ════════════════════════════════════
+function showToast(msg, dur=2500) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), duration);
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
 }
 
-// ============================================================
+// ════════════════════════════════════
 // INIT
-// ============================================================
+// ════════════════════════════════════
 function init() {
-  // Players init
-  state.players = ['', '', ''];
-  updatePlayersUI();
+  S.players = ['','',''];
+  renderPlayers();
   initStars();
 
-  // Hide loader after bar animation completes
+  // Unlock audio on first user tap anywhere
+  document.addEventListener('touchstart', unlockAudio, { once: true });
+  document.addEventListener('mousedown',  unlockAudio, { once: true });
+
+  // Hide loader, show home, start music
   setTimeout(() => {
-    document.getElementById('loading-overlay').classList.add('hide');
+    const overlay = document.getElementById('loading-overlay');
+    overlay.classList.add('hide');
     setTimeout(() => {
-      document.getElementById('loading-overlay').remove();
-      document.getElementById('screen-home').classList.add('active'); // Show home only now
-      startDayAudio(); // Music starts only once loader is gone
+      overlay.remove();
+      document.getElementById('screen-home').classList.add('active');
+      startDayAudio();
     }, 1000);
-  }, 2200);
+  }, 2400);
 }
 
 window.addEventListener('load', init);
 window.addEventListener('resize', () => {
-  const canvas = document.getElementById('stars');
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  const c = document.getElementById('stars');
+  c.width=window.innerWidth; c.height=window.innerHeight;
 });
 </script>
 </body>
