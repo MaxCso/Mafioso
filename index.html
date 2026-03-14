@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>La Famiglia — Jeu de Mafia</title>
+<link rel="icon" type="image/jpeg" href="icon.jpg">
+<link rel="apple-touch-icon" href="icon.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Special+Elite&family=Oswald:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
@@ -355,6 +357,9 @@
   /* ===== SCREEN 3: DISTRIBUTION ===== */
   #screen-reveal {
     background: url('bg-main.png') center/cover no-repeat;
+    justify-content: flex-start;
+    padding: 0 20px 110px;
+    overflow-y: auto;
   }
   #screen-reveal::after {
     content: '';
@@ -369,6 +374,7 @@
     z-index: 1;
     width: 100%;
     text-align: center;
+    padding-top: 24px;
   }
 
   .dossier-card {
@@ -515,6 +521,7 @@
     transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
     transform-style: preserve-3d;
     position: relative;
+    min-height: 440px;
   }
 
   .flip-inner.flipped { transform: rotateY(180deg); }
@@ -528,6 +535,7 @@
     position: absolute;
     inset: 0;
     transform: rotateY(180deg);
+    height: 100%;
   }
 
   .dossier-back {
@@ -1043,48 +1051,127 @@
   #loading-overlay {
     position: fixed;
     inset: 0;
-    background: var(--noir);
+    background: url('bg-main.png') center/cover no-repeat;
     z-index: 99999;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 20px;
-    transition: opacity 0.8s ease;
+    gap: 0;
+    transition: opacity 1s ease;
+    overflow: hidden;
+  }
+  #loading-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.92) 100%);
   }
   #loading-overlay.hide { opacity: 0; pointer-events: none; }
 
-  .loading-logo {
-    font-family: 'Playfair Display', serif;
-    font-size: 42px;
-    color: var(--or);
-    letter-spacing: 4px;
-    animation: pulse-or 2s infinite;
+  .loading-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    animation: fadeInUp 0.8s ease both;
   }
 
-  .loading-bar-container {
+  .loading-icon-ring {
+    width: 100px;
+    height: 100px;
+    border: 1px solid rgba(201,168,76,0.5);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 22px;
+    box-shadow: 0 0 40px rgba(201,168,76,0.15), inset 0 0 30px rgba(0,0,0,0.6);
+    animation: pulse-or 2.5s ease-in-out infinite;
+    position: relative;
+  }
+  .loading-icon-ring::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    border: 1px solid rgba(201,168,76,0.2);
+  }
+  .loading-icon-ring img {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 8px rgba(201,168,76,0.4));
+  }
+  .loading-icon-ring .icon-emoji {
+    font-size: 36px;
+    filter: drop-shadow(0 0 8px rgba(201,168,76,0.4));
+  }
+
+  .loading-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 44px;
+    font-weight: 900;
+    color: var(--or);
+    letter-spacing: 5px;
+    text-shadow: 2px 2px 0 var(--rouge), 0 0 50px rgba(201,168,76,0.5);
+    margin-bottom: 4px;
+    line-height: 1;
+  }
+
+  .loading-subtitle {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 7px;
+    color: var(--rouge-vif);
+    text-transform: uppercase;
+    margin-bottom: 36px;
+  }
+
+  .loading-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     width: 200px;
-    height: 2px;
-    background: rgba(201,168,76,0.2);
+    margin-bottom: 28px;
+  }
+  .loading-divider::before, .loading-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--or), transparent);
+  }
+  .loading-divider span { color: var(--or); font-size: 10px; }
+
+  .loading-bar-container {
+    width: 180px;
+    height: 1px;
+    background: rgba(201,168,76,0.15);
     overflow: hidden;
+    margin-bottom: 14px;
   }
 
   .loading-bar {
     height: 100%;
-    background: var(--or);
-    animation: loadBar 1.5s ease-in-out forwards;
+    background: linear-gradient(90deg, var(--rouge), var(--or));
+    animation: loadBar 2s ease-in-out forwards;
+    box-shadow: 0 0 8px rgba(201,168,76,0.6);
   }
 
   @keyframes loadBar {
-    from { width: 0; }
-    to { width: 100%; }
+    0% { width: 0; }
+    30% { width: 45%; }
+    70% { width: 75%; }
+    100% { width: 100%; }
   }
 
   .loading-text {
     font-family: 'Oswald', sans-serif;
-    font-size: 11px;
-    letter-spacing: 4px;
-    color: rgba(201,168,76,0.5);
+    font-size: 9px;
+    letter-spacing: 5px;
+    color: rgba(201,168,76,0.35);
     text-transform: uppercase;
   }
 
@@ -1098,10 +1185,17 @@
 
 <!-- LOADING -->
 <div id="loading-overlay">
-  <div class="loading-logo">🔫</div>
-  <div class="loading-logo" style="font-size:24px; margin-top:-10px;">La Famiglia</div>
-  <div class="loading-bar-container"><div class="loading-bar"></div></div>
-  <div class="loading-text">Chargement en cours...</div>
+  <div class="loading-inner">
+    <div class="loading-icon-ring">
+      <img src="icon.jpg" alt="La Famiglia" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <span class="icon-emoji" style="display:none">🔫</span>
+    </div>
+    <div class="loading-title">LA FAMIGLIA</div>
+    <div class="loading-subtitle">Jeu de rôles — Mafia</div>
+    <div class="loading-divider"><span>◆</span></div>
+    <div class="loading-bar-container"><div class="loading-bar"></div></div>
+    <div class="loading-text">Préparation en cours...</div>
+  </div>
 </div>
 
 <!-- BACKGROUNDS -->
@@ -1119,9 +1213,11 @@
 <div class="toast" id="toast"></div>
 
 <!-- ========== SCREEN: ACCUEIL ========== -->
-<div class="screen active" id="screen-home">
+<div class="screen" id="screen-home">
   <div class="home-content fade-in">
-    <div class="logo-badge">🔫</div>
+    <div class="logo-badge">
+      <img src="icon.jpg" alt="La Famiglia" style="width:62px;height:62px;object-fit:contain;border-radius:50%;filter:drop-shadow(0 0 8px rgba(201,168,76,0.5));" onerror="this.style.display='none';this.insertAdjacentText('afterend','🔫')">
+    </div>
     <div class="titre-jeu">LA FAMIGLIA</div>
     <div class="sous-titre">Jeu de rôles — Mafia</div>
     <div class="divider"><span class="divider-icon">◆</span></div>
@@ -1575,7 +1671,6 @@ function startGame() {
   state.roundNumber = 1;
 
   showScreen('reveal');
-  playVO('voix-debut');
   setupRevealScreen();
 }
 
@@ -1624,8 +1719,10 @@ function setupRevealScreen() {
   const btnNext = document.getElementById('btn-reveal-next');
   btnNext.textContent = state.currentReveal < total - 1 ? 'JOUEUR SUIVANT →' : 'COMMENCER LA NUIT 🌙';
 
-  // Click to flip
-  document.getElementById('flip-inner').onclick = flipCard;
+  // Remove old listener and attach fresh one
+  const newFlip = flipInner.cloneNode(true);
+  flipInner.parentNode.replaceChild(newFlip, flipInner);
+  newFlip.addEventListener('click', flipCard, { once: true });
 }
 
 function flipCard() {
@@ -1636,7 +1733,6 @@ function flipCard() {
   const player = state.players[state.currentReveal];
 
   document.getElementById('dossier-num').textContent = String(state.currentReveal + 1).padStart(3, '0');
-  document.getElementById('role-emoji').textContent = rd.emoji;
 
   // Try img first
   const imgZone = document.getElementById('role-image-zone');
@@ -1671,8 +1767,11 @@ function revealNext() {
     state.currentReveal++;
     setupRevealScreen();
   } else {
-    // All revealed, go to night
+    // All revealed — play intro VO then go to night
     showScreen('night');
+    playVO('voix-debut', () => {
+      // VO done, night screen already visible
+    });
   }
 }
 
@@ -1869,12 +1968,15 @@ function init() {
   updatePlayersUI();
   initStars();
 
-  // Hide loader
+  // Hide loader after bar animation completes
   setTimeout(() => {
     document.getElementById('loading-overlay').classList.add('hide');
-    setTimeout(() => document.getElementById('loading-overlay').remove(), 800);
-    startDayAudio();
-  }, 1800);
+    setTimeout(() => {
+      document.getElementById('loading-overlay').remove();
+      document.getElementById('screen-home').classList.add('active'); // Show home only now
+      startDayAudio(); // Music starts only once loader is gone
+    }, 1000);
+  }, 2200);
 }
 
 window.addEventListener('load', init);
