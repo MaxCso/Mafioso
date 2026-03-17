@@ -326,6 +326,31 @@ input[type="text"]::placeholder { color:rgba(212,201,168,0.25); }
 .ndot.active { background:rgba(201,168,76,0.55); animation:dotPulse 1s ease-in-out infinite; }
 @keyframes dotPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.35)} }
 
+.mafia-reveal-names {
+  margin-top:16px;
+  padding:12px 18px;
+  background:rgba(139,0,0,0.25);
+  border:1px solid rgba(180,0,0,0.5);
+  border-radius:2px;
+  font-family:'Oswald',sans-serif;
+  font-size:11px;
+  letter-spacing:3px;
+  color:rgba(200,0,0,0.7);
+  text-transform:uppercase;
+  animation:fadeInUp 0.6s ease both;
+}
+.mafia-reveal-names span {
+  display:block;
+  margin-top:6px;
+  font-family:'Playfair Display',serif;
+  font-size:20px;
+  font-style:italic;
+  letter-spacing:2px;
+  color:var(--rouge-vif);
+  text-shadow:0 0 16px rgba(204,0,0,0.6);
+  text-transform:none;
+}
+
 .btn-night {
   display:none; width:100%; max-width:280px; margin:0 auto; padding:16px;
   background:rgba(139,0,0,0.35); border:1px solid rgba(180,0,0,0.6); color:var(--or-clair);
@@ -701,7 +726,7 @@ function getNightSteps() {
     { text:'Que tout le monde ferme les yeux.\nLa ville s\'endort.', vo:'voix-nuit' },
     { text:'La Famiglia se réveille.\nMafieux, ouvrez les yeux et reconnaissez-vous.', vo:'voix-mafia-reveil', need:'mafia' },
     { text:'Mafieux, fermez les yeux.\nLa Famiglia se rendort.', vo:'voix-mafia-dodo', need:'mafia' },
-    { text:'L\'Infiltré se réveille.\nObservez les mafieux en silence.', vo:'voix-under-reveil', need:'under' },
+    { text:'L\'Infiltré se réveille.\nObservez les mafieux en silence.', vo:'voix-under-reveil', need:'under', showMafia:true },
     { text:'L\'Infiltré se rendort.', vo:'voix-mafia-dodo', need:'under' },
     { text:'Tout le monde peut ouvrir les yeux.\nLe débat peut commencer.', vo:'voix-jour' }
   ];
@@ -1039,7 +1064,16 @@ function runStep(idx) {
   // Fade text out, then in with new content
   const el = document.getElementById('night-text');
   el.style.opacity = '0';
-  setTimeout(() => { el.textContent = step.text; el.style.opacity = '1'; }, 500);
+  setTimeout(() => {
+    if (step.showMafia) {
+      const mafiaNames = S.players.filter((_,i) => S.roles[i] === 'mafia' && !S.eliminated.has(i));
+      const namesStr = mafiaNames.length > 0 ? mafiaNames.join(' · ') : '—';
+      el.innerHTML = step.text.replace(/\n/g,'<br>') + `<div class="mafia-reveal-names">🔫 La Famiglia<br><span>${namesStr}</span></div>`;
+    } else {
+      el.textContent = step.text;
+    }
+    el.style.opacity = '1';
+  }, 500);
 
   // Orb pulse
   const orb = document.getElementById('orb');
