@@ -668,7 +668,7 @@ input[type="text"]::placeholder { color:rgba(212,201,168,0.25); }
   </div>
   <div class="vote-hint-text" id="v-hint">Tapez la carte pour révéler</div>
   <div class="vote-bot">
-    <button class="btn-s" onclick="closeVote()" style="flex:1">← ANNULER</button>
+    <button class="btn-s" id="btn-cancel" onclick="closeVote()" style="flex:1">← ANNULER</button>
     <button class="btn-p" id="btn-confirm" onclick="confirmVote()" style="flex:2;display:none">CONFIRMER L'ÉLIMINATION</button>
   </div>
 </div>
@@ -1209,6 +1209,7 @@ function openVote(idx) {
   document.getElementById('v-front-name').textContent = `${S.players[idx]} — Tapez pour révéler`;
   document.getElementById('v-hint').textContent = 'Tapez la carte pour révéler le rôle';
   document.getElementById('btn-confirm').style.display = 'none';
+  document.getElementById('btn-cancel').style.display = '';
 
   // Fresh clone to reset listeners
   const old = document.getElementById('v-flip');
@@ -1242,6 +1243,7 @@ function doVoteFlip() {
   document.getElementById('v-flip').classList.add('flipped');
   S.voteRevealed = true;
   document.getElementById('v-hint').textContent = 'Rôle révélé — confirmez l\'élimination';
+  document.getElementById('btn-cancel').style.display = 'none';
   document.getElementById('btn-confirm').style.display = 'block';
 }
 
